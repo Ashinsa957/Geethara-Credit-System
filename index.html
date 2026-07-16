@@ -1811,7 +1811,13 @@
             tbody.innerHTML = htmlStr;
         }
 
-        function secureAction(action, id = null) { Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { Promise.all([ REF_BILLS().set({data: []}), REF_EXP().set({data: []}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
+        function secureAction(action, id = null) {
+            // Reset System is restricted to Admin accounts only, regardless of who has the password.
+            if(action === 'clear' && role !== 'Admin') {
+                Swal.fire('Access Denied', 'Reset System කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error');
+                return;
+            }
+            Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { if(role !== 'Admin') { Swal.fire('Access Denied', 'Reset System කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error'); return; } Promise.all([ REF_BILLS().set({data: []}), REF_EXP().set({data: []}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
         
         function autoCategorizeExpense(val) { val = val.toLowerCase();
             let cat = "Other"; if(val.includes('petrol') || val.includes('fuel') || val.includes('diesel')) cat = "Fuel";
@@ -1888,27 +1894,53 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            // Only Admin accounts may restore a backup, since doing so overwrites live data on every device.
+            if (role !== 'Admin') {
+                Swal.fire('Access Denied', 'Backup Restore කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error');
+                event.target.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const restoredData = JSON.parse(e.target.result);
                     if (restoredData && restoredData.db && restoredData.exp) {
-                        Promise.all([
-                            REF_BILLS().set({ data: restoredData.db }),
-                            REF_EXP().set({ data: restoredData.exp })
-                        ]).then(() => {
-                            Swal.fire({
-                                icon: 'success', title: 'Data Restored!', text: 'පද්ධතියේ දත්ත සාර්ථකව Restore කරන ලදී. සියලුම උපාංග වලට Live Sync වේ.'
-                            }).then(() => { location.reload(); });
-                        }).catch(err => Swal.fire('Error!', 'Cloud වෙත උඩුගත කිරීමේදී දෝෂයක්: ' + err.message, 'error'));
+                        // Ask for explicit confirmation before pushing this backup live to every
+                        // connected device - this is a destructive action for existing cloud data.
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'සියලුම උපාංග යාවත්කාලීන කරන්නද?',
+                            html: 'මෙම Backup ගොනුව ඇතුළත් කළහොත්, දැනට Cloud හි ඇති සියලුම දත්ත ඉවත් වී මෙම Backup එකේ ඇති දත්ත වෙනුවට යෙදෙනු ඇත. එතැන් සිට මෙම නව දත්ත සම්බන්ධිත සියලුම පරිගණක/උපාංග වෙත ක්ෂණිකව (Live) යාවත්කාලීන වේ. ඉදිරියට යාමට කැමතිද?',
+                            showCancelButton: true,
+                            confirmButtonText: 'ඔව්, සියලු උපාංග යාවත්කාලීන කරන්න',
+                            cancelButtonText: 'අවලංගු කරන්න',
+                            confirmButtonColor: '#dc2626',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (!result.isConfirmed) { event.target.value = ''; return; }
+
+                            Swal.fire({ title: 'සියලුම උපාංග වෙත Sync කරමින්...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            Promise.all([
+                                REF_BILLS().set({ data: restoredData.db }),
+                                REF_EXP().set({ data: restoredData.exp })
+                            ]).then(() => {
+                                logAction(`Backup Restored by ${currentUserEmail} - Synced to all devices`);
+                                Swal.fire({
+                                    icon: 'success', title: 'Data Restored!', text: 'පද්ධතියේ දත්ත සාර්ථකව Restore කරන ලදී. සියලුම උපාංග වලට Live Sync වේ.'
+                                }).then(() => { location.reload(); });
+                            }).catch(err => Swal.fire('Error!', 'Cloud වෙත උඩුගත කිරීමේදී දෝෂයක්: ' + err.message, 'error'));
+                            event.target.value = '';
+                        });
                     } else {
                         Swal.fire('Error!', 'මෙය නිවැරදි Geethara ERP Backup ගොනුවක් නොවේ.', 'error');
+                        event.target.value = '';
                     }
                 } catch (error) {
                     console.error("Restore Error:", error);
                     Swal.fire('Error!', 'ගොනුව කියවීමේදී දෝෂයක් මතු විය.', 'error');
+                    event.target.value = '';
                 }
-                event.target.value = '';
             };
             reader.readAsText(file);
         }
