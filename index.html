@@ -158,11 +158,20 @@
                         <button onclick="exportAllDataToCSV()" class="w-full text-left text-sm px-3 py-2 rounded-lg text-cyan-600 hover:bg-cyan-50 dark:hover:bg-slate-800 transition flex items-center gap-3"><i class="fas fa-file-csv"></i> Export All Data (CSV)</button>
                         <button onclick="exportSummaryExcel()" class="w-full text-left text-sm px-3 py-2 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition flex items-center gap-3"><i class="fas fa-file-invoice"></i> Export Summary</button>
                         <button onclick="backupDB()" class="w-full text-left text-sm px-3 py-2 rounded-lg text-purple-600 hover:bg-purple-50 dark:hover:bg-slate-800 transition flex items-center gap-3"><i class="fas fa-save"></i> Backup System</button>
+                        <div class="h-px bg-gray-200 dark:bg-slate-700 my-2" id="resetDividerLine"></div>
+                        <button onclick="secureAction('clear')" id="btnResetSystem" class="w-full text-left text-sm px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-slate-800 transition flex items-center gap-3 font-bold"><i class="fas fa-trash"></i> Reset System</button>
+                    </div>
+                </div>
+
+                <!-- Restore Data: visible to every logged-in employee. For everyone except the
+                     main admin account this only loads the backup into THIS device's view -
+                     it is never pushed to the cloud, so no other device is affected. -->
+                <div class="mt-6 relative" id="restoreArea">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-4 mb-2">Backup</p>
+                    <div class="glass p-4 rounded-2xl space-y-2 transition-all">
                         <label class="w-full text-left text-sm px-3 py-2 rounded-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-slate-800 transition flex items-center gap-3 cursor-pointer">
                             <i class="fas fa-upload"></i> Restore Data <input type="file" class="hidden" accept=".json" onchange="restoreDB(event)">
                         </label>
-                        <div class="h-px bg-gray-200 dark:bg-slate-700 my-2"></div>
-                        <button onclick="secureAction('clear')" class="w-full text-left text-sm px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-slate-800 transition flex items-center gap-3 font-bold"><i class="fas fa-trash"></i> Reset System</button>
                     </div>
                 </div>
             </aside>
@@ -765,6 +774,10 @@
         let activeStreet = 'All'; 
         let role = null;
         let currentUserEmail = null;
+
+        // Only this exact account may Reset the System or push a Restore to every device.
+        const SUPER_ADMIN_EMAIL = 'ashinsasathsara@gmail.com';
+        const isSuperAdmin = () => (currentUserEmail || '').toLowerCase() === SUPER_ADMIN_EMAIL;
         let chartInstance = null;
         
         let pendingCart = [];
@@ -1040,6 +1053,12 @@
             
             if(role === 'Collector') { document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); nav('addBills'); } 
             else { document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden')); nav('dashboard'); }
+
+            // Reset System is only ever available to the main admin account, even for other Admins.
+            const resetBtn = document.getElementById('btnResetSystem');
+            const resetDivider = document.getElementById('resetDividerLine');
+            if (resetBtn) resetBtn.classList.toggle('hidden', !isSuperAdmin());
+            if (resetDivider) resetDivider.classList.toggle('hidden', !isSuperAdmin());
             
             updateAutocomplete(); setupEnterNavigation(); loadDraft(); renderDashboard(); renderCheques(); updateAutoRep(); 
         }
@@ -1812,12 +1831,12 @@
         }
 
         function secureAction(action, id = null) {
-            // Reset System is restricted to Admin accounts only, regardless of who has the password.
-            if(action === 'clear' && role !== 'Admin') {
-                Swal.fire('Access Denied', 'Reset System කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error');
+            // Reset System is restricted to the main admin account only, regardless of who has the password.
+            if(action === 'clear' && !isSuperAdmin()) {
+                Swal.fire('Access Denied', 'Reset System කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error');
                 return;
             }
-            Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { if(role !== 'Admin') { Swal.fire('Access Denied', 'Reset System කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error'); return; } Promise.all([ REF_BILLS().set({data: []}), REF_EXP().set({data: []}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
+            Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { if(!isSuperAdmin()) { Swal.fire('Access Denied', 'Reset System කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error'); return; } Promise.all([ REF_BILLS().set({data: []}), REF_EXP().set({data: []}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
         
         function autoCategorizeExpense(val) { val = val.toLowerCase();
             let cat = "Other"; if(val.includes('petrol') || val.includes('fuel') || val.includes('diesel')) cat = "Fuel";
@@ -1890,22 +1909,27 @@
             Toast.fire({ icon: 'success', title: 'All Data CSV Downloaded' });
         }
 
+        // Restore behaves differently depending on who is logged in:
+        //  - ashinsasathsara@gmail.com (SUPER_ADMIN_EMAIL): the backup is pushed to Firestore,
+        //    which Live-syncs it to every connected device (existing cloud data is overwritten).
+        //  - Every other employee: the backup is loaded ONLY into this browser tab's in-memory
+        //    view (dbCache/expCache). Nothing is written to Firestore, so no other device -
+        //    and not even this device after a refresh or the next cloud update - is affected.
         function restoreDB(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            // Only Admin accounts may restore a backup, since doing so overwrites live data on every device.
-            if (role !== 'Admin') {
-                Swal.fire('Access Denied', 'Backup Restore කළ හැක්කේ Admin ගිණුම් වලට පමණි.', 'error');
-                event.target.value = '';
-                return;
-            }
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const restoredData = JSON.parse(e.target.result);
-                    if (restoredData && restoredData.db && restoredData.exp) {
+                    if (!(restoredData && restoredData.db && restoredData.exp)) {
+                        Swal.fire('Error!', 'මෙය නිවැරදි Geethara ERP Backup ගොනුවක් නොවේ.', 'error');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    if (isSuperAdmin()) {
                         // Ask for explicit confirmation before pushing this backup live to every
                         // connected device - this is a destructive action for existing cloud data.
                         Swal.fire({
@@ -1933,8 +1957,28 @@
                             event.target.value = '';
                         });
                     } else {
-                        Swal.fire('Error!', 'මෙය නිවැරදි Geethara ERP Backup ගොනුවක් නොවේ.', 'error');
-                        event.target.value = '';
+                        // Local-only restore: this device's view changes, nothing else does.
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'මෙම උපාංගය තුළ පමණක් Load කරන්නද?',
+                            html: 'මෙම Backup එක ඔබගේ මෙම උපාංගයේ දර්ශනය සඳහා පමණක් Load කෙරේ. එය Cloud වෙත හෝ වෙනත් කිසිදු පරිගණකයකට යාවත්කාලීන නොවේ. Cloud එකෙන් නව දත්ත පැමිණි විට හෝ Page එක Refresh කළ විට, මෙම දර්ශනය නැවතත් Live දත්ත වලින් replace වේ.',
+                            showCancelButton: true,
+                            confirmButtonText: 'ඔව්, මෙතනට පමණක් Load කරන්න',
+                            cancelButtonText: 'අවලංගු කරන්න',
+                            confirmButtonColor: '#3b82f6',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (!result.isConfirmed) { event.target.value = ''; return; }
+
+                            dbCache = restoredData.db;
+                            expCache = restoredData.exp;
+                            renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs();
+                            if (document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
+                            if (document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
+                            if (document.getElementById('page-expenses') && !document.getElementById('page-expenses').classList.contains('hidden')) renderExpenses();
+                            Toast.fire({ icon: 'success', title: 'Backup එක මෙම උපාංගය තුළ පමණක් Load විය (Cloud වෙත Sync නොවේ).' });
+                            event.target.value = '';
+                        });
                     }
                 } catch (error) {
                     console.error("Restore Error:", error);
