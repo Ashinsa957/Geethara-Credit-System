@@ -990,6 +990,49 @@
             applySettings(); initUI(); logAction(`Login: ${currentUserEmail} (${role})`); showAIHelper(`Welcome back, ${role}. Type Shift+? for shortcuts.`);
         }
 
+        // Forces an immediate re-fetch straight from the Firestore SERVER (bypassing any
+        // locally cached copy), then updates the local caches and re-renders. This guarantees
+        // that a device which was closed, backgrounded, or offline while a Backup Restore (or
+        // any other change) happened elsewhere always shows the very latest data the moment
+        // it is opened, brought back to the foreground, or reconnects - not just devices that
+        // happened to already be open at that exact moment.
+        function forceServerRefresh() {
+            if (!listenersAttached) return;
+
+            REF_BILLS().get({ source: 'server' }).then(snap => {
+                dbCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs();
+                if (document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
+                if (document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
+            }).catch(() => {}); // Offline: the live onSnapshot cache remains in effect until reconnect.
+
+            REF_EXP().get({ source: 'server' }).then(snap => {
+                expCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                if (document.getElementById('page-expenses') && !document.getElementById('page-expenses').classList.contains('hidden')) renderExpenses();
+            }).catch(() => {});
+
+            REF_ROUTES().get({ source: 'server' }).then(snap => {
+                const newRoutes = (snap.exists && snap.data().data && snap.data().data.length) ? snap.data().data : defaultRoutes;
+                applyRoutesLocal(newRoutes);
+            }).catch(() => {});
+
+            REF_SETTINGS().get({ source: 'server' }).then(snap => {
+                settingsCache = (snap.exists && snap.data().data) ? snap.data().data : settingsCache;
+                applySettings();
+            }).catch(() => {});
+
+            REF_LOGS().get({ source: 'server' }).then(snap => {
+                logsCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                if (document.getElementById('page-audit') && !document.getElementById('page-audit').classList.contains('hidden')) renderAudit();
+            }).catch(() => {});
+        }
+
+        // A device that was closed, backgrounded, or offline when data changed elsewhere
+        // catches up the instant it's opened again, brought to the front, or reconnects.
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') forceServerRefresh(); });
+        window.addEventListener('focus', forceServerRefresh);
+        window.addEventListener('online', forceServerRefresh);
+
         function setupEnterNavigation() {
             const billInputs = ['p_addDate', 'p_addStreet', 'p_addRep', 'p_addOutlet', 'p_addCases', 'p_addBillNo', 'p_addCredit', 'p_addRemarks'];
             billInputs.forEach((id, i) => { let el = document.getElementById(id); if(el) el.addEventListener('keydown', (e) => { if(e.key === 'Enter') { e.preventDefault(); if(i < billInputs.length - 1) document.getElementById(billInputs[i+1]).focus(); else addToPendingCart(); } }); });
