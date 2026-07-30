@@ -814,18 +814,123 @@
         let settingsCache = { name: 'Geethara Enterprises', color: '#3b82f6', dateFixed: false };
         let listenersAttached = false;
 
+        // ---- CONFLICT-SAFE WRITE VERSIONING ----
+        // Every write to REF_BILLS / REF_EXP carries a monotonically increasing "_v" counter.
+        // dbVersion/expVersion always reflect the version number of the data this device most
+        // recently received (from onSnapshot OR from its own successful write). Before writing,
+        // _saveDB()/saveExp() re-check the SERVER's current _v inside a Firestore transaction:
+        //   - if it still matches what this device last saw -> the write is safe, commit it.
+        //   - if it does NOT match -> another device (e.g. a Backup Restore, or another
+        //     employee's save) has changed the cloud data since we last synced. In that case we
+        //     ABORT this write instead of silently overwriting that newer data, immediately pull
+        //     the fresh data down, and tell the user to redo their last action. This is what
+        //     prevents "old data from a stale device wiping out a newly-restored backup / newly
+        //     added credit" - the exact bug this device previously had.
+        let dbVersion = 0;
+        let expVersion = 0;
+
+        // ---- LOCAL (BROWSER) SAFETY-NET BACKUP LAYER (mirrors the Stock System / index24 pattern) ----
+        // Every time this device confirms a known-good state (from Firestore, either via the live
+        // onSnapshot listener or a successful save), that state is also mirrored into localStorage.
+        // This is a personal, per-browser safety net only - it is never auto-pushed over live cloud
+        // data - it exists purely so that if the cloud is briefly unreachable, this device still has
+        // the last-known-good data to fall back on instead of showing a blank screen.
+        const LOCAL_BACKUP_KEY = 'geethara_credit_localBackup_v1';
+        function saveLocalSafetyNet() {
+            try { localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify({ db: dbCache, exp: expCache, dbVersion, expVersion, savedAt: new Date().toISOString() })); }
+            catch (e) { console.error('Local safety-net save failed:', e); }
+        }
+        function loadLocalSafetyNet() {
+            try { const raw = localStorage.getItem(LOCAL_BACKUP_KEY); return raw ? JSON.parse(raw) : null; }
+            catch (e) { return null; }
+        }
+
         // getDB()/getExp() always return a FRESH DEEP COPY of the cache (exactly like the old
         // JSON.parse(localStorage...) pattern), so callers can safely mutate the returned
         // array/objects and pass them into saveDB()/saveExp() without corrupting the cache.
         const getDB = () => JSON.parse(JSON.stringify(dbCache));
-        const _saveDB = (data) => { dbCache = data; REF_BILLS().set({ data }).catch(e => handleSyncError(e)); };
         const getExp = () => JSON.parse(JSON.stringify(expCache));
-        const saveExp = (data) => { expCache = data; REF_EXP().set({ data }).catch(e => handleSyncError(e)); };
         const getSettings = () => JSON.parse(JSON.stringify(settingsCache));
+
+        // Called whenever a write is rejected because the server's data moved on since we last
+        // saw it. Pulls the true latest data down immediately and clearly tells the user their
+        // last action was NOT saved (instead of silently discarding someone else's newer data).
+        function handleSaveConflict(label, actionDesc) {
+            forceServerRefresh();
+            Swal.fire({
+                icon: 'warning',
+                title: 'දත්ත වෙනත් තැනකින් යාවත්කාලීන විය',
+                html: `ඔබ මෙම ක්‍රියාව කරන අතරතුරදී, වෙනත් උපාංගයක් (හෝ Backup Restore එකක්) මගින් දත්ත Cloud එකේ යාවත්කාලීන කර ඇත. ඔබගේ අවසන් ක්‍රියාව <b>(${actionDesc || 'දත්ත වෙනස් කිරීම'})</b> ආරක්ෂිතව සුරැකීම වළක්වා නවතම දත්ත දැන් Load කරන ලදී. කරුණාකර නවතම දත්ත සමග ඔබගේ ක්‍රියාව නැවත උත්සාහ කරන්න.`,
+                confirmButtonText: 'තේරුණා'
+            });
+        }
 
         function handleSyncError(e) {
             console.error("Firestore sync error:", e);
             Toast.fire({ icon: 'error', title: 'Cloud sync failed - check internet connection' });
+        }
+
+        // ---- OFFLINE-SAFE RETRY QUEUE ----
+        // A transaction can only succeed with a live round-trip to the server, so if this device
+        // is genuinely offline the write above cannot silently queue itself the way a plain
+        // .set() used to. Instead we keep the attempted save right here (in memory + localStorage)
+        // and automatically retry it - safely, through the SAME conflict-checked path - the moment
+        // this device comes back online. Nothing entered by the user is lost while offline.
+        let pendingOfflineSave = null; // { type: 'bills'|'exp', data, actionDesc }
+        function isOfflineLikeError(e) {
+            return (typeof navigator !== 'undefined' && navigator.onLine === false) || (e && (e.code === 'unavailable' || /network|offline|failed to get document because the client is offline/i.test(e.message || '')));
+        }
+        function queuePendingOfflineSave(type, data, actionDesc) {
+            pendingOfflineSave = { type, data, actionDesc };
+            try { localStorage.setItem('geethara_pendingOfflineSave', JSON.stringify(pendingOfflineSave)); } catch (e) {}
+            if (type === 'bills') dbCache = data; else expCache = data; // optimistic local view so the user sees their entry
+            Toast.fire({ icon: 'warning', title: 'Offline - දත්ත මෙම උපාංගයේ ආරක්ෂිතව රැඳී ඇත. Internet ලැබුණු වහාම ස්වයංක්‍රීයව Cloud වෙත Sync වේ.' });
+        }
+        function flushPendingOfflineSave() {
+            if (!pendingOfflineSave) {
+                try { const raw = localStorage.getItem('geethara_pendingOfflineSave'); if (raw) pendingOfflineSave = JSON.parse(raw); } catch (e) {}
+            }
+            if (!pendingOfflineSave) return;
+            const job = pendingOfflineSave; pendingOfflineSave = null;
+            try { localStorage.removeItem('geethara_pendingOfflineSave'); } catch (e) {}
+            const runner = job.type === 'bills' ? _saveDB : saveExp;
+            runner(job.data, job.actionDesc);
+        }
+
+        // Transaction-guarded write for the Bills ledger. Re-checks the server's live version
+        // number at the instant of commit - if it has moved on since this device last saw it,
+        // the write is rejected (see handleSaveConflict) instead of overwriting newer data.
+        function _saveDB(data, actionDesc) {
+            const baseVersion = dbVersion;
+            return firestoreDB.runTransaction(t => t.get(REF_BILLS()).then(snap => {
+                const serverV = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                if (serverV !== baseVersion) { const err = new Error('CONFLICT'); err.code = 'CONFLICT'; throw err; }
+                t.set(REF_BILLS(), { data, _v: serverV + 1 });
+                return serverV + 1;
+            })).then(newV => {
+                dbCache = data; dbVersion = newV; saveLocalSafetyNet();
+            }).catch(e => {
+                if (e && e.code === 'CONFLICT') handleSaveConflict('bills', actionDesc);
+                else if (isOfflineLikeError(e)) queuePendingOfflineSave('bills', data, actionDesc);
+                else handleSyncError(e);
+            });
+        }
+
+        // Transaction-guarded write for the Expenses ledger - same protection as _saveDB above.
+        function saveExp(data, actionDesc) {
+            const baseVersion = expVersion;
+            return firestoreDB.runTransaction(t => t.get(REF_EXP()).then(snap => {
+                const serverV = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                if (serverV !== baseVersion) { const err = new Error('CONFLICT'); err.code = 'CONFLICT'; throw err; }
+                t.set(REF_EXP(), { data, _v: serverV + 1 });
+                return serverV + 1;
+            })).then(newV => {
+                expCache = data; expVersion = newV; saveLocalSafetyNet();
+            }).catch(e => {
+                if (e && e.code === 'CONFLICT') handleSaveConflict('expenses', actionDesc);
+                else if (isOfflineLikeError(e)) queuePendingOfflineSave('exp', data, actionDesc);
+                else handleSyncError(e);
+            });
         }
 
         function fixExistingExcelDates() {
@@ -850,7 +955,7 @@
                     });
                 }
             });
-            if(changed) { _saveDB(db); console.log("System Auto-fixed old Excel timezone dates."); }
+            if(changed) { _saveDB(db, 'Excel Timezone Auto-Fix'); console.log("System Auto-fixed old Excel timezone dates."); }
             const newSettings = { ...settingsCache, dateFixed: true };
             settingsCache = newSettings;
             REF_SETTINGS().set({ data: newSettings }).catch(e => handleSyncError(e));
@@ -859,16 +964,16 @@
         function saveDB(data, actionDesc = "System Update") {
             undoStack.push({ state: JSON.stringify(dbCache), desc: actionDesc });
             if(undoStack.length > 20) undoStack.shift();
-            redoStack = []; _saveDB(data);
+            redoStack = []; _saveDB(data, actionDesc);
             logAction(actionDesc);
         }
 
         function undoAction() {
-            if(undoStack.length > 0) { let actionObj = undoStack.pop(); redoStack.push({ state: JSON.stringify(dbCache), desc: actionObj.desc }); _saveDB(JSON.parse(actionObj.state)); renderTables(); renderCheques(); renderDashboard(); showAIHelper(`Undone: ${actionObj.desc}`); Toast.fire({icon: 'info', title: `Undone`}); } 
+            if(undoStack.length > 0) { let actionObj = undoStack.pop(); redoStack.push({ state: JSON.stringify(dbCache), desc: actionObj.desc }); _saveDB(JSON.parse(actionObj.state), `Undo: ${actionObj.desc}`); renderTables(); renderCheques(); renderDashboard(); showAIHelper(`Undone: ${actionObj.desc}`); Toast.fire({icon: 'info', title: `Undone`}); } 
             else showAIHelper("Nothing to undo.");
         }
         function redoAction() {
-            if(redoStack.length > 0) { let actionObj = redoStack.pop(); undoStack.push({ state: JSON.stringify(dbCache), desc: actionObj.desc }); _saveDB(JSON.parse(actionObj.state)); renderTables(); renderCheques(); renderDashboard(); showAIHelper(`Redone: ${actionObj.desc}`); Toast.fire({icon: 'success', title: `Redone`}); } 
+            if(redoStack.length > 0) { let actionObj = redoStack.pop(); undoStack.push({ state: JSON.stringify(dbCache), desc: actionObj.desc }); _saveDB(JSON.parse(actionObj.state), `Redo: ${actionObj.desc}`); renderTables(); renderCheques(); renderDashboard(); showAIHelper(`Redone: ${actionObj.desc}`); Toast.fire({icon: 'success', title: `Redone`}); } 
             else showAIHelper("Nothing to redo.");
         }
 
@@ -956,12 +1061,16 @@
 
             REF_BILLS().onSnapshot(snap => {
                 dbCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                dbVersion = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                saveLocalSafetyNet();
                 if (firstBillsLoad) { firstBillsLoad = false; boot(); }
                 else { renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs(); if(document.getElementById('addBillsDateFilter')) renderAddBillsHistory(); if(document.getElementById('collectionsDateFilter')) renderCollectionsHistory(); }
             }, e => handleSyncError(e));
 
             REF_EXP().onSnapshot(snap => {
                 expCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                expVersion = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                saveLocalSafetyNet();
                 if (firstExpLoad) { firstExpLoad = false; }
                 else if(document.getElementById('page-expenses') && !document.getElementById('page-expenses').classList.contains('hidden')) renderExpenses();
             }, e => handleSyncError(e));
@@ -988,6 +1097,7 @@
         // Runs exactly once, right after the very first Firestore snapshot for bills arrives.
         function boot() {
             applySettings(); initUI(); logAction(`Login: ${currentUserEmail} (${role})`); showAIHelper(`Welcome back, ${role}. Type Shift+? for shortcuts.`);
+            flushPendingOfflineSave(); // in case this device had data queued from a previous offline session
         }
 
         // Forces an immediate re-fetch straight from the Firestore SERVER (bypassing any
@@ -1001,6 +1111,8 @@
 
             REF_BILLS().get({ source: 'server' }).then(snap => {
                 dbCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                dbVersion = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                saveLocalSafetyNet();
                 renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs();
                 if (document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
                 if (document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
@@ -1008,6 +1120,8 @@
 
             REF_EXP().get({ source: 'server' }).then(snap => {
                 expCache = (snap.exists && snap.data().data) ? snap.data().data : [];
+                expVersion = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
+                saveLocalSafetyNet();
                 if (document.getElementById('page-expenses') && !document.getElementById('page-expenses').classList.contains('hidden')) renderExpenses();
             }).catch(() => {});
 
@@ -1029,9 +1143,9 @@
 
         // A device that was closed, backgrounded, or offline when data changed elsewhere
         // catches up the instant it's opened again, brought to the front, or reconnects.
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') forceServerRefresh(); });
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { forceServerRefresh(); flushPendingOfflineSave(); } });
         window.addEventListener('focus', forceServerRefresh);
-        window.addEventListener('online', forceServerRefresh);
+        window.addEventListener('online', () => { forceServerRefresh(); flushPendingOfflineSave(); });
 
         function setupEnterNavigation() {
             const billInputs = ['p_addDate', 'p_addStreet', 'p_addRep', 'p_addOutlet', 'p_addCases', 'p_addBillNo', 'p_addCredit', 'p_addRemarks'];
@@ -1879,7 +1993,7 @@
                 Swal.fire('Access Denied', 'Reset System කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error');
                 return;
             }
-            Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { if(!isSuperAdmin()) { Swal.fire('Access Denied', 'Reset System කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error'); return; } Promise.all([ REF_BILLS().set({data: []}), REF_EXP().set({data: []}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
+            Swal.fire({ title: 'Admin Password', input: 'password', showCancelButton: true }).then(r => { if(r.value === '111') { if(action === 'clear') { if(!isSuperAdmin()) { Swal.fire('Access Denied', 'Reset System කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error'); return; } Promise.all([ REF_BILLS().set({data: [], _v: 0}), REF_EXP().set({data: [], _v: 0}), REF_ROUTES().set({data: defaultRoutes}), REF_LOGS().set({data: []}) ]).then(() => { Swal.fire('Cleared!', 'All cloud data has been wiped for every user.', 'success').then(()=>location.reload()); }).catch(e => Swal.fire('Error', 'Could not clear cloud data: ' + e.message, 'error')); } if(action === 'del') { let db = getDB(); let bill = db.find(i=>i.id===id); db = db.filter(i=>i.id!==id); saveDB(db, `Deleted Bill: ${bill.billNo}`); renderTables(); renderCheques(); Toast.fire({ icon: 'success', title: 'Deleted!' }); } } else if(r.value) Swal.fire('Error','Wrong Password','error'); }); }
         
         function autoCategorizeExpense(val) { val = val.toLowerCase();
             let cat = "Other"; if(val.includes('petrol') || val.includes('fuel') || val.includes('diesel')) cat = "Fuel";
@@ -1891,7 +2005,7 @@
             const exps = getExp();
             const newId = 'exp_' + Date.now().toString() + Math.random().toString(36).substr(2,5);
             exps.push({ id: newId, date: d, cat, desc: document.getElementById('expDesc').value || cat, amt });
-            saveExp(exps); logAction(`Added Expense: Rs.${fmt(amt)}`); 
+            saveExp(exps, `Added Expense: Rs.${fmt(amt)}`); logAction(`Added Expense: Rs.${fmt(amt)}`); 
             document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; document.getElementById('expDesc').focus(); Toast.fire({ icon: 'success', title: 'Expense Saved' }); renderExpenses();
         }
 
@@ -1904,14 +2018,14 @@
                 showCancelButton: true, confirmButtonText: 'Update'
             }).then(res => {
                 if(res.isConfirmed) { exp.date = document.getElementById('ee_date').value;
-                    exp.desc = document.getElementById('ee_desc').value; exp.amt = parseFloat(document.getElementById('ee_amt').value); exp.cat = document.getElementById('ee_cat').value; saveExp(exps); Toast.fire({icon: 'success', title: 'Expense Updated'}); renderExpenses(); renderDashboard();
+                    exp.desc = document.getElementById('ee_desc').value; exp.amt = parseFloat(document.getElementById('ee_amt').value); exp.cat = document.getElementById('ee_cat').value; saveExp(exps, `Edited Expense: ${exp.desc}`); Toast.fire({icon: 'success', title: 'Expense Updated'}); renderExpenses(); renderDashboard();
                 }
             });
         }
 
         function deleteExpense(id) {
             Swal.fire({ title: 'Delete Expense?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then(r => {
-                if(r.isConfirmed) { let exps = getExp().filter(e => String(e.id) !== String(id)); saveExp(exps); Toast.fire({icon: 'success', title: 'Expense Deleted'}); renderExpenses(); renderDashboard(); }
+                if(r.isConfirmed) { let exps = getExp().filter(e => String(e.id) !== String(id)); saveExp(exps, 'Deleted Expense'); Toast.fire({icon: 'success', title: 'Expense Deleted'}); renderExpenses(); renderDashboard(); }
             });
         }
 
@@ -1989,8 +2103,8 @@
 
                             Swal.fire({ title: 'සියලුම උපාංග වෙත Sync කරමින්...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                             Promise.all([
-                                REF_BILLS().set({ data: restoredData.db }),
-                                REF_EXP().set({ data: restoredData.exp })
+                                REF_BILLS().set({ data: restoredData.db, _v: 0 }),
+                                REF_EXP().set({ data: restoredData.exp, _v: 0 })
                             ]).then(() => {
                                 logAction(`Backup Restored by ${currentUserEmail} - Synced to all devices`);
                                 Swal.fire({
