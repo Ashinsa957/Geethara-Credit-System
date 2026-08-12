@@ -438,6 +438,7 @@
                                 <input type="date" id="filterAuditTo" title="Audited Date To" class="border rounded-lg px-2 py-1.5 outline-none bg-white dark:bg-slate-700 flex-1 md:flex-none" onchange="renderTables()">
                                 <button onclick="clearFilters()" class="bg-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-300 transition" title="Clear Filters"><i class="fas fa-times"></i></button>
                                 <div class="hidden md:block h-6 w-px bg-gray-300 mx-1"></div>
+                                <button id="btnBulkDateChange" onclick="openBulkDateChangeModal()" class="hidden bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-600 hover:text-white transition font-bold no-print" title="Change Date for Selected Bills"><i class="fas fa-calendar-alt"></i> Change Date (<span id="bulkSelCount">0</span>)</button>
                                 <button onclick="exportToPDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold" title="Download PDF"><i class="fas fa-file-pdf"></i> PDF</button>
                                 <button onclick="window.print()" class="bg-theme text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition font-bold"><i class="fas fa-print"></i> Print</button>
                             </div>
@@ -446,6 +447,7 @@
                             <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
                                 <thead class="bg-gray-100 dark:bg-slate-900 select-none">
                                     <tr>
+                                        <th id="thBulkSelect" class="hidden p-3 md:p-4 text-center no-print" data-html2canvas-ignore="true"><input type="checkbox" id="bulkSelectAllChk" title="Select All" class="w-4 h-4 cursor-pointer" onchange="toggleBulkSelectAll(this.checked)"></th>
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('date')">Date <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('billNo')">Bill No <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('outlet')">Outlet <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
@@ -783,6 +785,8 @@
         let pendingCart = [];
         let pendingColCart = [];
         let currentlyFilteredData = [];
+        // Bulk bill-date-change selection (Super Admin only — see openBulkDateChangeModal)
+        let bulkSelectedIds = new Set();
         let searchTimeout = null;
         let currentSearch = '';
         let sortColumn = 'date'; let sortAscending = false;
@@ -1568,7 +1572,9 @@
                     else audHTML += `<div class="w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full border border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"></div>`;
                 }
                 audHTML += `</div>`;
+                const bulkChkHTML = isSuperAdmin() ? `<td class="p-2 md:p-3 text-center no-print"><input type="checkbox" class="bulkDateChk w-4 h-4 cursor-pointer" data-id="${item.id}" ${bulkSelectedIds.has(item.id)?'checked':''} onchange="toggleBulkSelect('${item.id}', this.checked)"></td>` : '';
                 mHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition ${actualBal<=0?'opacity-60':''} ${rowClass}">
+                    ${bulkChkHTML}
                     <td class="p-2 md:p-3 text-[10px] md:text-xs">${hl(item.date)}</td><td class="p-2 md:p-3 font-bold text-xs md:text-sm">${hl(item.billNo || '-')}</td>
                     <td class="p-2 md:p-3 font-semibold text-theme cursor-pointer hover:underline text-xs md:text-sm" title="Click to view all history for this shop" onclick="filterByShopName('${item.outlet.replace(/'/g, "\\'")}')">${hl(item.outlet)}</td>
                     <td class="p-2 md:p-3 text-center text-[10px] md:text-xs font-bold text-yellow-600">${vipBadge}</td>
@@ -1591,7 +1597,9 @@
                 }
             });
 
-            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="10" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr;
+            if(document.getElementById('thBulkSelect')) document.getElementById('thBulkSelect').classList.toggle('hidden', !isSuperAdmin());
+            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="${isSuperAdmin() ? 11 : 10}" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr;
+            updateBulkSelectUI();
             if(document.getElementById('colBody')) document.getElementById('colBody').innerHTML = pendingCount === 0 ? `<tr><td colspan="5" class="p-10 text-center text-green-500">No pending collections here.</td></tr>` : cHtmlStr;
             const getStatHTML = (c, cl, b, sc, scl, sb) => `
                 <div class="glass p-2 md:p-3 rounded-xl border-l-4 border-indigo-500 bg-indigo-50/30 flex flex-col justify-center"><p class="text-[9px] font-bold text-indigo-500 uppercase leading-tight">System Credit</p><h4 class="text-xs sm:text-sm md:text-md font-bold text-indigo-600 mt-0.5">Rs. ${fmt(sc)}</h4></div>
@@ -1610,6 +1618,68 @@
         }
 
         function clearFilters() { document.getElementById('globalSearch').value = ''; document.getElementById('clearSearchIcon').classList.add('hidden'); currentSearch = ''; document.getElementById('filterStatus').value='All'; document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; if(document.getElementById('filterAuditStatus')) document.getElementById('filterAuditStatus').value='All'; if(document.getElementById('filterAuditFrom')) document.getElementById('filterAuditFrom').value=''; if(document.getElementById('filterAuditTo')) document.getElementById('filterAuditTo').value=''; renderTables(); renderCheques(); }
+
+        // ===== Bulk Bill-Date Change (Super Admin only: ashinsasathsara@gmail.com) =====
+        // Lets the super admin tick several bills in Master Data and set a new date for all
+        // of them at once. Saved through saveDB() -> _saveDB(), the same transaction-guarded
+        // Firestore write everything else uses, so the change syncs to every device/user.
+        function toggleBulkSelect(id, checked) {
+            if(!isSuperAdmin()) return;
+            if(checked) bulkSelectedIds.add(id); else bulkSelectedIds.delete(id);
+            updateBulkSelectUI();
+        }
+
+        function toggleBulkSelectAll(checked) {
+            if(!isSuperAdmin()) return;
+            document.querySelectorAll('.bulkDateChk').forEach(chk => {
+                chk.checked = checked;
+                const id = chk.getAttribute('data-id');
+                if(checked) bulkSelectedIds.add(id); else bulkSelectedIds.delete(id);
+            });
+            updateBulkSelectUI();
+        }
+
+        function updateBulkSelectUI() {
+            const btn = document.getElementById('btnBulkDateChange');
+            const countEl = document.getElementById('bulkSelCount');
+            if(countEl) countEl.innerText = bulkSelectedIds.size;
+            if(btn) { if(isSuperAdmin() && bulkSelectedIds.size > 0) btn.classList.remove('hidden'); else btn.classList.add('hidden'); }
+            const selectAllChk = document.getElementById('bulkSelectAllChk');
+            if(selectAllChk) {
+                const rowChks = document.querySelectorAll('.bulkDateChk');
+                selectAllChk.checked = rowChks.length > 0 && Array.from(rowChks).every(c => c.checked);
+            }
+        }
+
+        function openBulkDateChangeModal() {
+            if(!isSuperAdmin()) { Swal.fire('Access Denied', 'මෙම පහසුකම භාවිතා කළ හැක්කේ ashinsasathsara@gmail.com ගිණුමට පමණි.', 'error'); return; }
+            if(bulkSelectedIds.size === 0) { Swal.fire('තෝරා නැත', 'දිනය වෙනස් කිරීමට කරුණාකර බිල්පත් තෝරන්න (ටික් කරන්න).', 'warning'); return; }
+            Swal.fire({
+                title: `තෝරාගත් බිල්පත් ${bulkSelectedIds.size}ක් සඳහා නව දිනය`,
+                html: `<input type="date" id="bulkNewDateInput" class="swal2-input" style="width:80%">`,
+                showCancelButton: true,
+                confirmButtonText: 'යාවත්කාලීන කරන්න',
+                cancelButtonText: 'අවලංගු කරන්න',
+                preConfirm: () => {
+                    const val = document.getElementById('bulkNewDateInput').value;
+                    if(!val) { Swal.showValidationMessage('කරුණාකර නව දිනයක් තෝරන්න'); return false; }
+                    return val;
+                }
+            }).then(res => {
+                if(res.isConfirmed && res.value) applyBulkDateChange(res.value);
+            });
+        }
+
+        function applyBulkDateChange(newDate) {
+            if(!isSuperAdmin()) return;
+            let db = getDB(); let changedCount = 0;
+            db.forEach(b => { if(bulkSelectedIds.has(b.id)) { b.date = newDate; changedCount++; } });
+            if(changedCount === 0) return;
+            saveDB(db, `Bulk Date Change: ${changedCount} bill(s) -> ${newDate} (by ${currentUserEmail})`);
+            bulkSelectedIds.clear();
+            renderTables(); renderCheques(); renderDashboard();
+            Toast.fire({ icon: 'success', title: `බිල්පත් ${changedCount}ක දිනය ${newDate} ලෙස යාවත්කාලීන කරන ලදී` });
+        }
 
         function renderAddBillsHistory() {
             const date = document.getElementById('addBillsDateFilter').value;
