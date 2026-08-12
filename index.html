@@ -933,34 +933,6 @@
             });
         }
 
-        function fixExistingExcelDates() {
-            if(settingsCache.dateFixed) return;
-            let db = getDB(); let changed = false;
-            
-            db.forEach(b => {
-                if (b.remarks === 'Excel Import' || b.repName === 'EXCEL IMPORT') {
-                    if(b.date) {
-                        let d = new Date(b.date);
-                        if(!isNaN(d.getTime())) { d.setDate(d.getDate() + 1); b.date = d.toISOString().split('T')[0]; changed = true; }
-                    }
-                }
-                if (b.installments) {
-                    b.installments.forEach(ins => {
-                        if (ins.by === 'Excel Import' || ins.by === 'EXCEL IMPORT') {
-                            if(ins.date) {
-                                let id = new Date(ins.date);
-                                if(!isNaN(id.getTime())) { id.setDate(id.getDate() + 1); ins.date = id.toISOString().split('T')[0]; changed = true; }
-                            }
-                        }
-                    });
-                }
-            });
-            if(changed) { _saveDB(db, 'Excel Timezone Auto-Fix'); console.log("System Auto-fixed old Excel timezone dates."); }
-            const newSettings = { ...settingsCache, dateFixed: true };
-            settingsCache = newSettings;
-            REF_SETTINGS().set({ data: newSettings }).catch(e => handleSyncError(e));
-        }
-
         function saveDB(data, actionDesc = "System Update") {
             undoStack.push({ state: JSON.stringify(dbCache), desc: actionDesc });
             if(undoStack.length > 20) undoStack.shift();
@@ -1197,7 +1169,6 @@
         }
 
         function initUI() {
-            fixExistingExcelDates();
             const dS = document.getElementById('p_addStreet');
             dS.innerHTML = '';
             streets.forEach(s => { dS.innerHTML += `<option value="${s}">${s}</option>`; });
