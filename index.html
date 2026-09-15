@@ -388,6 +388,7 @@
                                     <option value="All">All Cheques</option>
                                     <option value="Pending">Pending Cheques</option>
                                     <option value="Realized">Realized Cheques</option>
+                                    <option value="Returned">Returned Cheques</option>
                                 </select>
                             </div>
                         </div>
@@ -400,6 +401,7 @@
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortCheques('bankName')">Bank Details <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition text-red-500" onclick="sortCheques('bankDate')">Bank Date (Realization) <i class="fas fa-sort ml-1 text-[10px]"></i></th>
                                         <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition text-right" onclick="sortCheques('amt')">Amount (Rs) <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 text-center no-print">Status / Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="chequesBody" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
@@ -456,6 +458,7 @@
                                         <th class="p-3 md:p-4 text-right">Collected</th>
                                         <th class="p-3 md:p-4 text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('balance')">Balance <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
                                         <th class="p-3 md:p-4 text-center">Status</th>
+                                        <th class="p-3 md:p-4" title="Remarks / Notes">Remarks / Notes</th>
                                         <th class="p-3 md:p-4 text-center" title="Audit Verifications">Audit</th>
                                         <th class="p-3 md:p-4 text-center no-print" data-html2canvas-ignore="true">Actions</th>
                                     </tr>
@@ -671,6 +674,46 @@
             </div>
 
             <button onclick="saveDirectCheque()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-base md:text-lg"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+
+    <div id="modal-return-cheque" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-4 md:p-6 transform transition-all scale-95 max-h-[95vh] overflow-y-auto" id="returnChequeModalContent">
+            <div class="flex justify-between items-center mb-4 md:mb-6 border-b pb-3 md:pb-4">
+                <h3 class="text-lg md:text-2xl font-extrabold text-red-700 dark:text-red-400"><i class="fas fa-undo"></i> Return / Bounce Cheque</h3>
+                <button onclick="closeModal('modal-return-cheque')" class="w-8 h-8 bg-gray-100 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="bg-red-50 dark:bg-slate-700 p-3 md:p-4 rounded-xl border border-red-100 mb-4 flex flex-wrap gap-x-6 gap-y-1 text-xs md:text-sm">
+                <p><span class="font-bold text-red-700">Original Bank:</span> <span id="rc_origBank" class="font-bold"></span></p>
+                <p><span class="font-bold text-red-700">Cheque No:</span> <span id="rc_origChqNo" class="font-bold"></span></p>
+                <p><span class="font-bold text-red-700">Cheque Amount:</span> <span id="rc_origAmt" class="font-bold"></span></p>
+            </div>
+
+            <input type="hidden" id="rc_billId"><input type="hidden" id="rc_insIdx"><input type="hidden" id="rc_chequeAmt"><input type="hidden" id="rc_chqNoRaw"><input type="hidden" id="rc_bankRaw">
+
+            <p class="text-xs md:text-sm text-gray-500 mb-3">This will be added as a new <b>Debit / Credit Bill</b> to the shop below, exactly like a normal bill in <i>Add Bills</i>. Please review and edit the details before saving.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4">
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Credit Bill Date (Cheque Date)</label><input type="date" id="rc_date" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm"></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Street / Route</label><select id="rc_street" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm"></select></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Rep Name</label><input type="text" id="rc_rep" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none uppercase text-sm"></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Outlet / Shop Name</label><input type="text" id="rc_outlet" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold uppercase text-sm"></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Cases / Qty</label><input type="number" id="rc_cases" placeholder="0" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm"></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase mb-1 block">Bill / Invoice No</label><input type="text" id="rc_billNo" class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none uppercase font-bold text-sm"></div>
+            </div>
+
+            <div class="bg-red-50 dark:bg-slate-700 p-3 md:p-4 rounded-xl border border-red-100 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4">
+                <div><label class="text-[10px] md:text-xs font-bold text-red-700 uppercase mb-1 block">Bank Charges Deducted (Rs.)</label><input type="number" id="rc_bankCharges" value="0" oninput="recalcReturnCreditTotal()" class="w-full p-2 border rounded-xl outline-none text-sm"></div>
+                <div><label class="text-[10px] md:text-xs font-bold text-red-700 uppercase mb-1 block">Debit / Credit Bill Amount (Rs.)</label><input type="number" id="rc_credit" class="w-full p-2 border rounded-xl outline-none text-lg md:text-xl font-bold text-red-600 bg-white"></div>
+            </div>
+
+            <div class="mb-6">
+                <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Remarks / Notes (Returned Cheque No.)</label>
+                <input type="text" id="rc_remarks" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm">
+            </div>
+
+            <button onclick="confirmReturnCheque()" class="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold py-3 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-base md:text-lg"><i class="fas fa-save"></i> Save Return & Add Debit Bill</button>
         </div>
     </div>
 
@@ -1417,6 +1460,85 @@
             Swal.fire('Success', 'Direct Cheque & Paid Bill Saved Successfully!', 'success');
         }
 
+        // ---------------- Return / Bounced Cheque ----------------
+        function openReturnChequeModal(billId, insIdx) {
+            const db = getDB();
+            const bill = db.find(b => b.id === billId);
+            if(!bill || !bill.installments || !bill.installments[insIdx]) return Swal.fire('Error', 'Original cheque record not found!', 'error');
+            const ins = bill.installments[insIdx];
+            if(ins.returned) return Swal.fire('Already Returned', 'This cheque has already been marked as Returned.', 'info');
+
+            const parsed = parseChequeDetails(ins.by, ins.bankName);
+
+            document.getElementById('rc_billId').value = billId;
+            document.getElementById('rc_insIdx').value = insIdx;
+            document.getElementById('rc_chequeAmt').value = ins.amt;
+            document.getElementById('rc_chqNoRaw').value = parsed.chqNo;
+            document.getElementById('rc_bankRaw').value = parsed.bankName;
+
+            document.getElementById('rc_origBank').innerText = parsed.bankName;
+            document.getElementById('rc_origChqNo').innerText = '#' + parsed.chqNo;
+            document.getElementById('rc_origAmt').innerText = 'Rs. ' + fmt(ins.amt);
+
+            // Populate street dropdown
+            const rcStreet = document.getElementById('rc_street'); rcStreet.innerHTML = '';
+            streets.forEach(s => { rcStreet.innerHTML += `<option value="${s}" ${s === bill.street ? 'selected' : ''}>${s}</option>`; });
+
+            document.getElementById('rc_date').value = (parsed.bankDate && parsed.bankDate !== '-') ? parsed.bankDate : new Date().toISOString().split('T')[0];
+            document.getElementById('rc_rep').value = bill.repName || '';
+            document.getElementById('rc_outlet').value = bill.outlet;
+            document.getElementById('rc_cases').value = '';
+            document.getElementById('rc_billNo').value = 'RTN';
+            document.getElementById('rc_bankCharges').value = 0;
+            document.getElementById('rc_credit').value = ins.amt;
+            document.getElementById('rc_remarks').value = `Returned Cheque #${parsed.chqNo}`;
+
+            document.getElementById('modal-return-cheque').classList.remove('hidden');
+            setTimeout(() => document.getElementById('returnChequeModalContent').classList.remove('scale-95'), 10);
+        }
+
+        function recalcReturnCreditTotal() {
+            const chequeAmt = parseFloat(document.getElementById('rc_chequeAmt').value) || 0;
+            const charges = parseFloat(document.getElementById('rc_bankCharges').value) || 0;
+            document.getElementById('rc_credit').value = (chequeAmt + charges).toFixed(2);
+        }
+
+        function confirmReturnCheque() {
+            const billId = document.getElementById('rc_billId').value;
+            const insIdx = parseInt(document.getElementById('rc_insIdx').value);
+            const d = document.getElementById('rc_date').value;
+            const s = document.getElementById('rc_street').value;
+            const rep = document.getElementById('rc_rep').value.trim().toUpperCase();
+            const o = document.getElementById('rc_outlet').value.trim().toUpperCase();
+            const cases = document.getElementById('rc_cases').value.trim();
+            const b = document.getElementById('rc_billNo').value.trim().toUpperCase() || 'RTN';
+            const rem = document.getElementById('rc_remarks').value.trim();
+            const c = parseFloat(document.getElementById('rc_credit').value);
+
+            if(!d) return Swal.fire('Error', 'Please select the credit bill date (cheque date)!', 'error');
+            if(!o || isNaN(c) || c <= 0) return Swal.fire('Error', 'Valid Outlet Name & Credit Amount Required!', 'error');
+
+            let db = getDB();
+            const origBill = db.find(x => x.id === billId);
+            if(!origBill || !origBill.installments || !origBill.installments[insIdx]) return Swal.fire('Error', 'Original cheque record not found!', 'error');
+            if(origBill.installments[insIdx].returned) return Swal.fire('Already Returned', 'This cheque has already been marked as Returned.', 'info');
+
+            const newId = Date.now().toString() + Math.random().toString(36).substr(2,5);
+            const newBill = { id: newId, date: d, street: s, outlet: o, billNo: b, repName: rep, cases: cases, remarks: rem, credit: c, collected: 0, installments: [] };
+            db.push(newBill);
+
+            origBill.installments[insIdx].returned = true;
+            origBill.installments[insIdx].returnBillId = newId;
+            origBill.installments[insIdx].returnDate = d;
+
+            saveDB(db, `Cheque Returned: #${document.getElementById('rc_chqNoRaw').value} - ${o}`);
+            logAction(`Marked Cheque #${document.getElementById('rc_chqNoRaw').value} as Returned for ${o}, added Debit Bill ${b}`);
+            trackSmartDate('add', d);
+            closeModal('modal-return-cheque');
+            renderTables(); renderCheques(); renderDashboard(); updateBankList();
+            Swal.fire('Success', 'Cheque marked as Returned & Debit Bill added successfully!', 'success');
+        }
+
         function addAudit(id) {
             let db = getDB(); let item = db.find(x => x.id === id);
             if(!item.auditStages) item.auditStages = [];
@@ -1460,11 +1582,11 @@
 
             db.forEach(b => {
                 if(b.installments) {
-                    b.installments.forEach(ins => {
+                    b.installments.forEach((ins, insIdx) => {
                         let isCheque = ins.type === 'Cheque' || (ins.by && ins.by.includes('Cheque'));
                         if(isCheque) {
                             let parsed = parseChequeDetails(ins.by, ins.bankName);
-                            chequeList.push({ id: b.id, outlet: b.outlet, street: b.street, dateAdded: ins.date, amt: ins.amt, bankName: parsed.bankName, chqNo: parsed.chqNo, bankDate: parsed.bankDate, billNo: b.billNo || '-' });
+                            chequeList.push({ id: b.id, insIdx: insIdx, outlet: b.outlet, street: b.street, dateAdded: ins.date, amt: ins.amt, bankName: parsed.bankName, chqNo: parsed.chqNo, bankDate: parsed.bankDate, billNo: b.billNo || '-', returned: !!ins.returned });
                         }
                     });
                 }
@@ -1474,8 +1596,9 @@
             
             const filterStatus = document.getElementById('chequeStatusFilter')?.value || 'All';
             const today = new Date().toISOString().split('T')[0];
-            if (filterStatus === 'Pending') { chequeList = chequeList.filter(c => c.bankDate >= today); } 
-            else if (filterStatus === 'Realized') { chequeList = chequeList.filter(c => c.bankDate < today); }
+            if (filterStatus === 'Pending') { chequeList = chequeList.filter(c => !c.returned && c.bankDate >= today); } 
+            else if (filterStatus === 'Realized') { chequeList = chequeList.filter(c => !c.returned && c.bankDate < today); }
+            else if (filterStatus === 'Returned') { chequeList = chequeList.filter(c => c.returned); }
 
             chequeList.sort((a,b) => {
                 let valA = a[sortColCheque] || ''; let valB = b[sortColCheque] || '';
@@ -1484,17 +1607,21 @@
                 if(valA < valB) return sortAscCheque ? -1 : 1; if(valA > valB) return sortAscCheque ? 1 : -1; return 0;
             });
             let tbody = document.getElementById('chequesBody'); let total = 0; let html = '';
-            if(chequeList.length === 0) { html = `<tr><td colspan="5" class="p-6 text-center text-gray-400 italic">No cheque records found for selected criteria.</td></tr>`; } 
+            if(chequeList.length === 0) { html = `<tr><td colspan="6" class="p-6 text-center text-gray-400 italic">No cheque records found for selected criteria.</td></tr>`; } 
             else {
                 chequeList.forEach(c => {
                     total += c.amt; let isPending = c.bankDate >= today; let dateColor = isPending ? 'text-red-500' : 'text-green-600';
                     let statusDot = isPending ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block mr-1"></span>' : '<span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block mr-1"></span>';
-                    html += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-100 dark:border-slate-700">
+                    let actionCell = c.returned
+                        ? `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap"><i class="fas fa-undo"></i> RETURNED</span>`
+                        : `<button onclick="openReturnChequeModal('${c.id}', ${c.insIdx})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold shadow-sm no-print" title="Mark this cheque as Returned / Bounced"><i class="fas fa-undo"></i> Return</button>`;
+                    html += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-100 dark:border-slate-700 ${c.returned ? 'opacity-60' : ''}">
                         <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500">${hl(c.dateAdded)}</td>
                         <td class="p-2 md:p-3 font-semibold text-theme text-xs md:text-sm cursor-pointer hover:underline" onclick="filterByShopName('${c.outlet.replace(/'/g, "\\'")}')">${hl(c.outlet)}<br><span class="text-[9px] md:text-[10px] text-gray-400">${c.street}</span></td>
                         <td class="p-2 md:p-3 text-xs md:text-sm font-bold text-blue-700">${hl(c.bankName)}<br><span class="text-[9px] text-gray-500">#${hl(c.chqNo)}</span></td>
                         <td class="p-2 md:p-3 text-xs md:text-sm font-bold ${dateColor}">${statusDot}${hl(c.bankDate)}</td>
                         <td class="p-2 md:p-3 text-right font-extrabold text-green-600 text-sm md:text-base">${fmt(c.amt)}</td>
+                        <td class="p-2 md:p-3 text-center no-print">${actionCell}</td>
                     </tr>`;
                 });
             }
@@ -1580,6 +1707,7 @@
                     <td class="p-2 md:p-3 text-center text-[10px] md:text-xs font-bold text-yellow-600">${vipBadge}</td>
                     <td class="p-2 md:p-3 text-right text-xs md:text-sm">${fmt(item.credit)}</td><td class="p-2 md:p-3 text-right text-green-600 font-bold text-xs md:text-sm">${fmt(item.collected)}</td>
                     <td class="p-2 md:p-3 text-right font-extrabold text-red-500 text-xs md:text-sm">${fmt(actualBal)}</td><td class="p-2 md:p-3 text-center">${statBadge}</td>
+                    <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 max-w-[160px] whitespace-normal">${item.remarks ? hl(item.remarks) : '<span class="text-gray-300 italic">-</span>'}</td>
                     <td class="p-2 md:p-3 text-center no-print">${audHTML}</td>
                     <td class="p-2 md:p-3 text-center flex gap-1 justify-center no-print">
                         <button onclick="shareViaWhatsApp('${item.outlet.replace(/'/g, "\\'")}', '${actualBal}', '${item.billNo}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition text-xs" title="WhatsApp Reminder"><i class="fab fa-whatsapp"></i></button>
@@ -1598,7 +1726,7 @@
             });
 
             if(document.getElementById('thBulkSelect')) document.getElementById('thBulkSelect').classList.toggle('hidden', !isSuperAdmin());
-            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="${isSuperAdmin() ? 11 : 10}" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr;
+            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="${isSuperAdmin() ? 12 : 11}" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr;
             updateBulkSelectUI();
             if(document.getElementById('colBody')) document.getElementById('colBody').innerHTML = pendingCount === 0 ? `<tr><td colspan="5" class="p-10 text-center text-green-500">No pending collections here.</td></tr>` : cHtmlStr;
             const getStatHTML = (c, cl, b, sc, scl, sb) => `
