@@ -443,6 +443,11 @@
                                 <button id="btnBulkDateChange" onclick="openBulkDateChangeModal()" class="hidden bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-600 hover:text-white transition font-bold no-print" title="Change Date for Selected Bills"><i class="fas fa-calendar-alt"></i> Change Date (<span id="bulkSelCount">0</span>)</button>
                                 <button onclick="exportToPDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold" title="Download PDF"><i class="fas fa-file-pdf"></i> PDF</button>
                                 <button onclick="window.print()" class="bg-theme text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition font-bold"><i class="fas fa-print"></i> Print</button>
+                                <div class="hidden md:block h-6 w-px bg-gray-300 mx-1"></div>
+                                <div class="relative no-print" data-html2canvas-ignore="true">
+                                    <button onclick="toggleColumnPanel()" class="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition font-bold" title="Show / Hide Columns"><i class="fas fa-columns"></i> Columns</button>
+                                    <div id="columnPanel" class="hidden absolute right-0 mt-2 w-52 max-h-80 overflow-y-auto bg-white dark:bg-slate-800 border dark:border-slate-600 rounded-xl shadow-2xl z-30 p-2 space-y-0.5 text-xs md:text-sm"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="flex-1 overflow-y-auto">
@@ -450,17 +455,17 @@
                                 <thead class="bg-gray-100 dark:bg-slate-900 select-none">
                                     <tr>
                                         <th id="thBulkSelect" class="hidden p-3 md:p-4 text-center no-print" data-html2canvas-ignore="true"><input type="checkbox" id="bulkSelectAllChk" title="Select All" class="w-4 h-4 cursor-pointer" onchange="toggleBulkSelectAll(this.checked)"></th>
-                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('date')">Date <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
-                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('billNo')">Bill No <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
-                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('outlet')">Outlet <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
-                                        <th class="p-3 md:p-4 text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" title="Customer VIP Rating">Rating</th>
-                                        <th class="p-3 md:p-4 text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('credit')">Credit <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
-                                        <th class="p-3 md:p-4 text-right">Collected</th>
-                                        <th class="p-3 md:p-4 text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition" onclick="sortData('balance')">Balance <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
-                                        <th class="p-3 md:p-4 text-center">Status</th>
-                                        <th class="p-3 md:p-4" title="Remarks / Notes">Remarks / Notes</th>
-                                        <th class="p-3 md:p-4 text-center" title="Audit Verifications">Audit</th>
-                                        <th class="p-3 md:p-4 text-center no-print" data-html2canvas-ignore="true">Actions</th>
+                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-date" onclick="sortData('date')">Date <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-billno" onclick="sortData('billNo')">Bill No <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-outlet" onclick="sortData('outlet')">Outlet <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-rating" title="Customer VIP Rating">Rating</th>
+                                        <th class="p-3 md:p-4 text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-credit" onclick="sortData('credit')">Credit <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 text-right col-collected">Collected</th>
+                                        <th class="p-3 md:p-4 text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-700 transition col-balance" onclick="sortData('balance')">Balance <i class="fas fa-sort ml-1 text-gray-400 text-[10px]"></i></th>
+                                        <th class="p-3 md:p-4 text-center col-status">Status</th>
+                                        <th class="p-3 md:p-4 col-remarks" title="Remarks / Notes">Remarks / Notes</th>
+                                        <th class="p-3 md:p-4 text-center col-audit" title="Audit Verifications">Audit</th>
+                                        <th class="p-3 md:p-4 text-center no-print col-actions" data-html2canvas-ignore="true">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="masBody" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody>
@@ -835,6 +840,12 @@
         let sortColumn = 'date'; let sortAscending = false;
         let sortColCheque = 'bankDate';
         let sortAscCheque = true;
+
+        // ---------------- Master Data: Column Show/Hide ----------------
+        const columnLabels = { date:'Date', billno:'Bill No', outlet:'Outlet', rating:'Rating', credit:'Credit', collected:'Collected', balance:'Balance', status:'Status', remarks:'Remarks / Notes', audit:'Audit', actions:'Actions' };
+        let columnVisibility = {};
+        try { columnVisibility = JSON.parse(localStorage.getItem('geethara_colvis') || '{}'); } catch(e) { columnVisibility = {}; }
+        Object.keys(columnLabels).forEach(c => { if(columnVisibility[c] === undefined) columnVisibility[c] = true; });
         
         let undoStack = [];
         let redoStack = [];
@@ -1566,6 +1577,48 @@
         function filterByShopName(shopName) { nav('masterData'); document.getElementById('globalSearch').value = shopName; document.getElementById('filterStatus').value = 'All'; document.getElementById('filterFrom').value = ''; document.getElementById('filterTo').value = ''; if(document.getElementById('filterAuditStatus')) document.getElementById('filterAuditStatus').value='All'; if(document.getElementById('filterAuditFrom')) document.getElementById('filterAuditFrom').value=''; if(document.getElementById('filterAuditTo')) document.getElementById('filterAuditTo').value=''; handleSearch(); }
         function sortData(col) { if(sortColumn === col) sortAscending = !sortAscending; else { sortColumn = col; sortAscending = true; } renderTables(); }
 
+        function renderColumnPanel() {
+            const panel = document.getElementById('columnPanel');
+            if(!panel) return;
+            panel.innerHTML = `<p class="text-[10px] font-bold text-gray-400 uppercase px-2 pb-1">Show / Hide Columns</p>` + Object.keys(columnLabels).map(c => `
+                <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg">
+                    <input type="checkbox" ${columnVisibility[c] ? 'checked' : ''} onchange="toggleColumnVisibility('${c}', this.checked)" class="w-3.5 h-3.5 cursor-pointer">
+                    <span class="text-gray-700 dark:text-gray-200">${columnLabels[c]}</span>
+                </label>`).join('') + `<div class="border-t mt-1 pt-1 dark:border-slate-600"><button onclick="resetColumnVisibility()" class="w-full text-left px-2 py-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-slate-700 font-bold"><i class="fas fa-undo mr-1"></i> Show All</button></div>`;
+        }
+
+        function toggleColumnPanel() {
+            const panel = document.getElementById('columnPanel');
+            if(!panel) return;
+            if(panel.classList.contains('hidden')) { renderColumnPanel(); panel.classList.remove('hidden'); }
+            else panel.classList.add('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('columnPanel');
+            if(!panel || panel.classList.contains('hidden')) return;
+            if(!panel.contains(e.target) && !e.target.closest('[onclick="toggleColumnPanel()"]')) panel.classList.add('hidden');
+        });
+
+        function toggleColumnVisibility(col, checked) {
+            columnVisibility[col] = checked;
+            localStorage.setItem('geethara_colvis', JSON.stringify(columnVisibility));
+            applyColumnVisibility();
+        }
+
+        function resetColumnVisibility() {
+            Object.keys(columnLabels).forEach(c => columnVisibility[c] = true);
+            localStorage.setItem('geethara_colvis', JSON.stringify(columnVisibility));
+            applyColumnVisibility(); renderColumnPanel();
+        }
+
+        function applyColumnVisibility() {
+            Object.keys(columnLabels).forEach(c => {
+                const visible = columnVisibility[c] !== false;
+                document.querySelectorAll('.col-' + c).forEach(el => { el.style.display = visible ? '' : 'none'; });
+            });
+        }
+
         function parseChequeDetails(byStr, defaultBank) {
             let chqNo = '-'; let bankDate = '-'; let bankName = defaultBank || '-';
             if(byStr) {
@@ -1702,14 +1755,14 @@
                 const bulkChkHTML = isSuperAdmin() ? `<td class="p-2 md:p-3 text-center no-print"><input type="checkbox" class="bulkDateChk w-4 h-4 cursor-pointer" data-id="${item.id}" ${bulkSelectedIds.has(item.id)?'checked':''} onchange="toggleBulkSelect('${item.id}', this.checked)"></td>` : '';
                 mHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition ${actualBal<=0?'opacity-60':''} ${rowClass}">
                     ${bulkChkHTML}
-                    <td class="p-2 md:p-3 text-[10px] md:text-xs">${hl(item.date)}</td><td class="p-2 md:p-3 font-bold text-xs md:text-sm">${hl(item.billNo || '-')}</td>
-                    <td class="p-2 md:p-3 font-semibold text-theme cursor-pointer hover:underline text-xs md:text-sm" title="Click to view all history for this shop" onclick="filterByShopName('${item.outlet.replace(/'/g, "\\'")}')">${hl(item.outlet)}</td>
-                    <td class="p-2 md:p-3 text-center text-[10px] md:text-xs font-bold text-yellow-600">${vipBadge}</td>
-                    <td class="p-2 md:p-3 text-right text-xs md:text-sm">${fmt(item.credit)}</td><td class="p-2 md:p-3 text-right text-green-600 font-bold text-xs md:text-sm">${fmt(item.collected)}</td>
-                    <td class="p-2 md:p-3 text-right font-extrabold text-red-500 text-xs md:text-sm">${fmt(actualBal)}</td><td class="p-2 md:p-3 text-center">${statBadge}</td>
-                    <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 max-w-[160px] whitespace-normal">${item.remarks ? hl(item.remarks) : '<span class="text-gray-300 italic">-</span>'}</td>
-                    <td class="p-2 md:p-3 text-center no-print">${audHTML}</td>
-                    <td class="p-2 md:p-3 text-center flex gap-1 justify-center no-print">
+                    <td class="p-2 md:p-3 text-[10px] md:text-xs col-date">${hl(item.date)}</td><td class="p-2 md:p-3 font-bold text-xs md:text-sm col-billno">${hl(item.billNo || '-')}</td>
+                    <td class="p-2 md:p-3 font-semibold text-theme cursor-pointer hover:underline text-xs md:text-sm col-outlet" title="Click to view all history for this shop" onclick="filterByShopName('${item.outlet.replace(/'/g, "\\'")}')">${hl(item.outlet)}</td>
+                    <td class="p-2 md:p-3 text-center text-[10px] md:text-xs font-bold text-yellow-600 col-rating">${vipBadge}</td>
+                    <td class="p-2 md:p-3 text-right text-xs md:text-sm col-credit">${fmt(item.credit)}</td><td class="p-2 md:p-3 text-right text-green-600 font-bold text-xs md:text-sm col-collected">${fmt(item.collected)}</td>
+                    <td class="p-2 md:p-3 text-right font-extrabold text-red-500 text-xs md:text-sm col-balance">${fmt(actualBal)}</td><td class="p-2 md:p-3 text-center col-status">${statBadge}</td>
+                    <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 max-w-[160px] whitespace-normal col-remarks">${item.remarks ? hl(item.remarks) : '<span class="text-gray-300 italic">-</span>'}</td>
+                    <td class="p-2 md:p-3 text-center no-print col-audit">${audHTML}</td>
+                    <td class="p-2 md:p-3 text-center flex gap-1 justify-center no-print col-actions">
                         <button onclick="shareViaWhatsApp('${item.outlet.replace(/'/g, "\\'")}', '${actualBal}', '${item.billNo}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition text-xs" title="WhatsApp Reminder"><i class="fab fa-whatsapp"></i></button>
                         <button onclick="viewInvoice('${item.id}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-blue-50 text-theme hover:bg-theme hover:text-white transition text-xs"><i class="fas fa-eye"></i></button>
                         <button onclick="openEditModal('${item.id}')" class="admin-only w-6 h-6 md:w-7 md:h-7 rounded bg-yellow-50 text-yellow-600 hover:bg-yellow-600 hover:text-white transition text-xs"><i class="fas fa-pen"></i></button>
@@ -1743,6 +1796,7 @@
             
             if(document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
             if(document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
+            applyColumnVisibility();
         }
 
         function clearFilters() { document.getElementById('globalSearch').value = ''; document.getElementById('clearSearchIcon').classList.add('hidden'); currentSearch = ''; document.getElementById('filterStatus').value='All'; document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; if(document.getElementById('filterAuditStatus')) document.getElementById('filterAuditStatus').value='All'; if(document.getElementById('filterAuditFrom')) document.getElementById('filterAuditFrom').value=''; if(document.getElementById('filterAuditTo')) document.getElementById('filterAuditTo').value=''; renderTables(); renderCheques(); }
