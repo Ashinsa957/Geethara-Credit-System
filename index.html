@@ -64,10 +64,16 @@
         /* Drag and Drop styling */
         .dragging { opacity: 0.5; border: 2px dashed var(--primary); }
 
+        /* Daily security notice banner */
+        #securityBanner { position: fixed; top: 0; left: 0; width: 100%; z-index: 200; background: #dc2626; color: #ffffff; overflow: hidden; white-space: nowrap; padding: 10px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.35); pointer-events: none; }
+        #securityBanner span { display: inline-block; padding-left: 100%; font-weight: 700; font-size: 13px; letter-spacing: 0.2px; animation: securityScroll 10s linear forwards; }
+        @keyframes securityScroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: white; color: black !important; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: white; color: black !important; overflow: visible !important; max-height: none !important; height: auto !important; }
+            #invoiceModalBox, #modal-invoice { overflow: visible !important; max-height: none !important; height: auto !important; position: static !important; }
             .no-print { display: none !important; }
         }
     </style>
@@ -561,7 +567,7 @@
     </div>
 
     <div id="modal-invoice" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div id="invoiceModalBox" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-4 bg-gray-50 border-b flex justify-between items-center no-print">
                 <h3 class="font-bold text-gray-700 text-sm md:text-base"><i class="fas fa-file-invoice text-theme"></i> Professional Invoice</h3>
                 <div class="flex gap-2">
@@ -606,7 +612,7 @@
                 <h3 class="text-xl md:text-2xl font-extrabold text-gray-800 dark:text-white">Receive Payment</h3>
                 <button onclick="closeModal('modal-payment')" class="w-8 h-8 bg-gray-100 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
             </div>
-            <input type="hidden" id="payId">
+            <input type="hidden" id="payId"><input type="hidden" id="payFullBal">
             <div class="bg-theme-light dark:bg-slate-700 p-4 rounded-2xl mb-4 text-center">
                 <p class="text-xs text-gray-500 font-bold uppercase mb-1">Outlet</p>
                 <h4 class="text-lg md:text-xl font-bold text-theme dark:text-blue-400" id="payOutlet">--</h4>
@@ -645,7 +651,10 @@
             </div>
 
             <div class="mb-6">
-                <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Paying Amount (Rs.)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase block">Paying Amount (Rs.)</label>
+                    <button type="button" onclick="fillFullPayment()" class="text-[10px] md:text-xs font-bold bg-theme-light text-theme px-2.5 py-1 rounded-lg hover:bg-theme hover:text-white transition" title="මුළු ලැබිය යුතු මුදලම ස්වයංක්‍රීයව පුරවන්න"><i class="fas fa-coins"></i> Total Paid</button>
+                </div>
                 <input type="number" id="payAmount" onkeydown="if(event.key==='Enter') confirmPayment()" class="w-full p-3 md:p-4 text-2xl md:text-3xl font-extrabold text-gray-800 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-0 outline-none text-center bg-gray-50" placeholder="0.00">
             </div>
             <button onclick="confirmPayment()" class="w-full bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-base md:text-lg"><i class="fas fa-plus"></i> Add to Queue</button>
@@ -1040,6 +1049,28 @@
             });
         }
 
+        // Shows the mandatory restricted-access notice, scrolling across the screen for
+        // ~10 seconds. Only shown once per day, per logged-in user (tracked in localStorage).
+        function maybeShowDailySecurityNotice(email) {
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const key = 'securityNoticeShown_' + (email || 'unknown').toLowerCase();
+                if (localStorage.getItem(key) === todayStr) return;
+                localStorage.setItem(key, todayStr);
+            } catch (e) { /* localStorage unavailable - show it anyway */ }
+            showSecurityNoticeBanner();
+        }
+
+        function showSecurityNoticeBanner() {
+            const msg = "This is a restricted system and web page exclusively for authorized employees of Geethara Enterprises. Unauthorized access, use, or modification of this portal is strictly prohibited. All activities on this network are monitored, recorded, and subject to security audits. Violators will face immediate disciplinary action, termination of employment, and legal prosecution.";
+            const old = document.getElementById('securityBanner'); if (old) old.remove();
+            const banner = document.createElement('div');
+            banner.id = 'securityBanner';
+            banner.innerHTML = `<span><i class="fas fa-shield-alt"></i>&nbsp; ${msg}</span>`;
+            document.body.appendChild(banner);
+            setTimeout(() => { if (banner && banner.parentNode) banner.remove(); }, 10500);
+        }
+
         function signOutUser() {
             Swal.fire({ title: 'Sign Out?', icon: 'question', showCancelButton: true, confirmButtonText: 'Sign Out' }).then(r => {
                 if(r.isConfirmed) auth.signOut();
@@ -1078,6 +1109,7 @@
             document.getElementById('userNameDisplay').innerText = user.displayName || user.email;
             document.getElementById('userInitial').innerText = (user.displayName || user.email).charAt(0).toUpperCase();
 
+            maybeShowDailySecurityNotice(currentUserEmail);
             attachRealtimeListeners();
         });
 
@@ -2058,7 +2090,7 @@
 
         function openPay(id, outlet, bal) { 
             document.getElementById('payId').value = id;
-            document.getElementById('payOutlet').innerText = outlet; document.getElementById('payArrears').innerText = fmt(bal); document.getElementById('payAmount').value = ''; 
+            document.getElementById('payOutlet').innerText = outlet; document.getElementById('payArrears').innerText = fmt(bal); document.getElementById('payFullBal').value = bal || 0; document.getElementById('payAmount').value = ''; 
             document.getElementById('payDate').value = sdLockedPay ? sdLockedPay : new Date().toISOString().split('T')[0];
             
             document.querySelector('input[value="Cash"]').checked = true;
@@ -2066,6 +2098,12 @@
             document.getElementById('payBank').value = ''; document.getElementById('payChequeNo').value = ''; document.getElementById('payBankDate').value = '';
 
             document.getElementById('modal-payment').classList.remove('hidden'); setTimeout(()=> { document.getElementById('payAmount').focus(); document.getElementById('payModalContent').classList.remove('scale-95'); }, 10);
+        }
+
+        function fillFullPayment() {
+            const bal = parseFloat(document.getElementById('payFullBal').value) || 0;
+            document.getElementById('payAmount').value = bal > 0 ? (Math.round(bal * 100) / 100) : '';
+            document.getElementById('payAmount').focus();
         }
 
         function confirmPayment() { 
@@ -2175,8 +2213,22 @@
 
         async function shareInvoiceWhatsApp() {
             const element = document.getElementById('printArea');
-            const opt = { margin: 0, filename: 'Geethara_Invoice.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-            Toast.fire({icon: 'info', title: 'Generating AI Professional PDF...'}); html2pdf().set(opt).from(element).save();
+            const box = document.getElementById('invoiceModalBox');
+            // Temporarily remove the modal's max-height/scroll clipping so html2canvas
+            // captures the FULL invoice, not just the portion currently scrolled into view.
+            const boxPrevStyle = box.getAttribute('style') || '';
+            const elPrevStyle = element.getAttribute('style') || '';
+            box.style.maxHeight = 'none'; box.style.overflow = 'visible'; box.style.height = 'auto';
+            element.style.maxHeight = 'none'; element.style.overflow = 'visible'; element.style.height = 'auto';
+
+            const opt = { margin: 0, filename: 'Geethara_Invoice.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+            Toast.fire({icon: 'info', title: 'Generating AI Professional PDF...'});
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } finally {
+                box.setAttribute('style', boxPrevStyle);
+                element.setAttribute('style', elPrevStyle);
+            }
             setTimeout(() => { let waLink = `https://wa.me/?text=${encodeURIComponent(currentShareText + "\n\n(කරුණාකර අමුණා ඇති බිල්පත පරීක්ෂා කරන්න.)")}`; window.open(waLink, '_blank'); }, 1000);
         }
 
@@ -2374,7 +2426,9 @@
         function startVoice(id, cb) { Toast.fire({icon: 'info', title: 'Voice command not fully supported yet.'}); }
         function triggerExcel() { document.getElementById('excelUpload').click(); }
         function exportToPDF() { const element = document.getElementById('pdfArea');
-            html2pdf().set({ margin: 0.2, filename: 'Report.pdf', jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } }).from(element).save();
+            Toast.fire({icon: 'info', title: 'Generating PDF...'});
+            const opt = { margin: 0.2, filename: 'Report.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
+            html2pdf().set(opt).from(element).save();
         }
         function backupDB() { const data = JSON.stringify({ db: getDB(), exp: getExp() });
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = `Backup.json`; a.click(); logAction("System Backup Downloaded");
