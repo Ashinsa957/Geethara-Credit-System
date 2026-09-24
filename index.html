@@ -64,13 +64,18 @@
         /* Drag and Drop styling */
         .dragging { opacity: 0.5; border: 2px dashed var(--primary); }
 
-        /* Daily security notice banner - drifts from top to bottom of the screen slowly (~60s) */
-        #securityBanner { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; }
-        #securityBanner .notice-box { position: absolute; left: 50%; top: -35%; width: min(94vw, 620px); transform: translateX(-50%); background: linear-gradient(135deg, #dc2626, #991b1b); color: #ffffff; padding: 16px 20px; border-radius: 16px; box-shadow: 0 12px 34px rgba(0,0,0,0.4); text-align: center; animation: securityDrift 60s linear forwards; }
+        /* Daily security notice banner - pops up, stays fixed for ~25s, then fades away */
+        #securityBanner { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; display: flex; align-items: flex-start; justify-content: center; padding-top: 8vh; }
+        #securityBanner .notice-box { width: min(94vw, 620px); background: linear-gradient(135deg, #dc2626, #991b1b); color: #ffffff; padding: 16px 20px; border-radius: 16px; box-shadow: 0 12px 34px rgba(0,0,0,0.4); text-align: center; animation: securityPop 25s ease-in-out forwards; }
         #securityBanner .notice-box .en { font-weight: 700; font-size: 12.5px; line-height: 1.55; }
         #securityBanner .notice-box .si { font-weight: 700; font-size: 13px; line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.3); }
         #securityBanner .notice-box i { margin-right: 4px; }
-        @keyframes securityDrift { 0% { top: -35%; } 100% { top: 115%; } }
+        @keyframes securityPop {
+            0% { opacity: 0; transform: scale(0.9); }
+            6% { opacity: 1; transform: scale(1); }
+            92% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.96); }
+        }
 
         @media print {
             body * { visibility: hidden; }
@@ -761,7 +766,6 @@
             "1234kumarika@gmail.com": "Admin",
             "pkumara125@gmail.com": "Admin",
             "ranjithu1234@gmail.com": "Admin",
-            "ashinsasathsaralg@gmail.com": "Admin",
             "ashensirsathsara@gmail.com": "Collector"
             // "another.user@gmail.com": "Collector",
         };
@@ -1053,8 +1057,8 @@
             });
         }
 
-        // Shows the mandatory restricted-access notice, drifting top-to-bottom across the
-        // screen over ~60 seconds. Only shown once per day, per logged-in user (localStorage).
+        // Shows the mandatory restricted-access notice as a pop-up that stays on screen for
+        // ~25 seconds then fades away. Only shown once per day, per logged-in user (localStorage).
         function maybeShowDailySecurityNotice(email) {
             try {
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -1073,7 +1077,7 @@
             banner.id = 'securityBanner';
             banner.innerHTML = `<div class="notice-box"><div class="en"><i class="fas fa-shield-alt"></i>${msgEn}</div><div class="si">${msgSi}</div></div>`;
             document.body.appendChild(banner);
-            setTimeout(() => { if (banner && banner.parentNode) banner.remove(); }, 61000);
+            setTimeout(() => { if (banner && banner.parentNode) banner.remove(); }, 25500);
         }
 
         function signOutUser() {
