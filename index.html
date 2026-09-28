@@ -940,9 +940,41 @@
             });
         }
 
+        // Shows the REAL reason a cloud save/load failed (instead of always blaming the internet).
+        let _lastSyncErrKey = '', _lastSyncErrAt = 0;
+        function syncSizeInfo() {
+            try {
+                const kb = o => Math.round(new Blob([JSON.stringify(o)]).size / 1024);
+                return `Bills ≈ ${kb(dbCache)} KB · Expenses ≈ ${kb(expCache)} KB · Logs ≈ ${kb(logsCache)} KB`;
+            } catch (err) { return ''; }
+        }
         function handleSyncError(e) {
             console.error("Firestore sync error:", e);
-            Toast.fire({ icon: 'error', title: 'Cloud sync failed - check internet connection' });
+            const code = (e && e.code) ? String(e.code) : 'unknown';
+            const now = Date.now();
+            if (_lastSyncErrKey === code && now - _lastSyncErrAt < 20000) return; // several listeners can fail together - show once
+            _lastSyncErrKey = code; _lastSyncErrAt = now;
+            const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            const reasons = {
+                'permission-denied':  'Firebase Rules මගින් මෙම ගිණුමට දත්ත ලිවීමට/කියවීමට ඉඩ නොදේ. (Firestore Rules කල් ඉකුත් වී හෝ වෙනස් වී ඇත.)',
+                'resource-exhausted': 'Firebase නොමිලේ පැකේජයේ දෛනික සීමාව (Quota) අවසන් වී ඇත.',
+                'invalid-argument':   'දත්ත ප්‍රමාණය Firestore document එකකට ඉඩ දෙන 1 MB සීමාව ඉක්මවා ඇත, නැතහොත් දත්තවල වැරදි අගයක් (undefined) ඇත.',
+                'unauthenticated':    'Login කාලය අවසන්. Sign Out වී නැවත Google වලින් Sign in වන්න.',
+                'deadline-exceeded':  'Server එකෙන් පිළිතුර ලැබීමට වැඩි වේලාවක් ගියා (Internet ඉතා මන්දගාමී විය හැක). නැවත උත්සාහ කරන්න.',
+                'aborted':            'එකවර වෙනත් උපාංගයක් දත්ත වෙනස් කරමින් සිටියා. තත්පර කිහිපයකින් නැවත උත්සාහ කරන්න.',
+                'unavailable':        'Firebase server එකට සම්බන්ධ විය නොහැක. Internet / Network / Firewall බලන්න.'
+            };
+            Swal.fire({
+                icon: 'error',
+                title: 'Cloud Sync අසාර්ථකයි',
+                html: `<div style="text-align:left;font-size:14px;line-height:1.6">
+                    <p><b>Error code:</b> <code>${esc(code)}</code></p>
+                    <p>${esc(reasons[code] || 'නොදන්නා දෝෂයක්. මෙම Error code එක සහ පහත විස්තරය Developer ට දන්වන්න.')}</p>
+                    <p style="font-size:11px;color:#64748b;word-break:break-word">${esc((e && e.message) || '')}</p>
+                    <p style="font-size:11px;color:#64748b">${esc(syncSizeInfo())} (එක document එකක සීමාව ≈ 1024 KB)</p>
+                </div>`,
+                confirmButtonText: 'හරි'
+            });
         }
 
         // ---- OFFLINE-SAFE RETRY QUEUE ----
