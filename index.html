@@ -110,6 +110,7 @@
         @keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.35); } }
         .cmd-active { background: var(--primary-light); }
         .dark-mode .cmd-item:hover { background: #334155; }
+        body:not(.pro-on) .pro-only { display: none !important; }
     </style>
 </head>
 <body class="overflow-x-hidden" id="dropZone">
@@ -163,9 +164,9 @@
                 </div>
 
                 <div class="flex items-center gap-1 md:gap-3 shrink-0">
-                    <button onclick="openCmdPalette()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i></button>
-                    <button onclick="openAlerts()" class="relative flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Smart Alerts"><i class="fas fa-bell"></i><span id="alertBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button>
-                    <button onclick="lockApp()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Lock App (Alt+L)"><i class="fas fa-lock"></i></button>
+                    <button onclick="openCmdPalette()" class="pro-only hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i></button>
+                    <button onclick="openAlerts()" class="pro-only relative flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Smart Alerts"><i class="fas fa-bell"></i><span id="alertBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button>
+                    <button onclick="lockApp()" class="pro-only hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Lock App (Alt+L)"><i class="fas fa-lock"></i></button>
                     <button onclick="showShortcuts()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Shortcuts (Shift+?)"><i class="fas fa-keyboard"></i></button>
                     <button onclick="toggleFullScreen()" class="w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center transition text-gray-600 dark:text-gray-300" title="Focus Mode"><i class="fas fa-expand"></i></button>
                     <button onclick="toggleTheme()" class="w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center transition text-gray-600 dark:text-gray-300"><i class="fas fa-moon"></i></button>
@@ -191,7 +192,7 @@
                 <button onclick="nav('expenses')" id="nav-expenses" class="nav-item flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-wallet w-5 text-lg"></i> Expenses</button>
                 <button onclick="nav('routesManage')" id="nav-routesManage" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-map-marked-alt w-5 text-lg"></i> Manage Routes & Reps</button>
                 <button onclick="nav('audit')" id="nav-audit" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-history w-5 text-lg"></i> Audit Trail</button>
-                <button onclick="nav('insights')" id="nav-insights" class="nav-item flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-chart-line w-5 text-lg"></i> Insights & Reports</button>
+                <button onclick="nav('insights')" id="nav-insights" class="pro-only nav-item flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-chart-line w-5 text-lg"></i> Insights & Reports</button>
                 <button onclick="nav('shopNames')" id="nav-shopNames" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-spell-check w-5 text-lg"></i> Shop Names Editor</button>
                 
                 <div class="admin-only mt-6 relative" id="dragDropArea">
@@ -419,7 +420,7 @@
                                 <p class="text-[10px] font-bold text-green-600 uppercase leading-tight">Total Cheque Amount (Selected)</p>
                                 <h4 class="text-2xl font-extrabold text-green-700 mt-0.5" id="chequesTotal">Rs. 0.00</h4>
                             </div>
-                            <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow no-print"><i class="fas fa-print"></i> Print</button>
+                            <button onclick="chqLimit=1e9;renderCheques();setTimeout(()=>{window.print();chqLimit=CHQ_PAGE;renderCheques();},60)" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow no-print"><i class="fas fa-print"></i> Print</button>
                         </div>
                     </div>
 
@@ -488,7 +489,7 @@
                                 <div class="hidden md:block h-6 w-px bg-gray-300 mx-1"></div>
                                 <button id="btnBulkDateChange" onclick="openBulkDateChangeModal()" class="hidden bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-600 hover:text-white transition font-bold no-print" title="Change Date for Selected Bills"><i class="fas fa-calendar-alt"></i> Change Date (<span id="bulkSelCount">0</span>)</button>
                                 <button onclick="exportToPDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold" title="Download PDF"><i class="fas fa-file-pdf"></i> PDF</button>
-                                <button onclick="window.print()" class="bg-theme text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition font-bold"><i class="fas fa-print"></i> Print</button>
+                                <button onclick="printAllMaster()" class="bg-theme text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition font-bold"><i class="fas fa-print"></i> Print</button>
                                 <div class="hidden md:block h-6 w-px bg-gray-300 mx-1"></div>
                                 <div class="relative no-print" data-html2canvas-ignore="true">
                                     <button onclick="toggleColumnPanel()" class="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition font-bold" title="Show / Hide Columns"><i class="fas fa-columns"></i> Columns</button>
@@ -913,13 +914,14 @@
             const tC = document.getElementById('streetTabs');
             if(!tC) return;
             const activeBefore = activeStreet;
-            tC.innerHTML = `<button class="tab-btn px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 ${activeBefore==='All'?'active bg-theme-light text-theme':'text-gray-500'}" onclick="setStreet('All', this)">All Routes</button>`;
-            const db = getDB();
+            let _th = `<button class="tab-btn px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 ${activeBefore==='All'?'active bg-theme-light text-theme':'text-gray-500'}" onclick="setStreet('All', this)">All Routes</button>`;
+            const _arr = {}; (dbCache || []).forEach(x => { _arr[x.street] = (_arr[x.street] || 0) + (x.credit - x.collected); });
             streets.forEach((s) => {
-                let sArrears = db.filter(x => x.street === s).reduce((sum, item) => sum + (item.credit - item.collected), 0);
+                let sArrears = _arr[s] || 0;
                 let healthDot = sArrears > 0 ? '<i class="fas fa-circle text-[8px] text-red-500 ml-1"></i>' : '<i class="fas fa-circle text-[8px] text-green-500 ml-1"></i>';
-                tC.innerHTML += `<button class="tab-btn px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 ${activeBefore===s?'active bg-theme-light text-theme':'text-gray-500'}" onclick="setStreet('${s.replace(/'/g, "\\'")}', this)">${s} ${healthDot}</button>`;
+                _th += `<button class="tab-btn px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 ${activeBefore===s?'active bg-theme-light text-theme':'text-gray-500'}" onclick="setStreet('${s.replace(/'/g, "\\'")}', this)">${s} ${healthDot}</button>`;
             });
+            tC.innerHTML = _th;
         }
         // ----------------------------------------
 
@@ -996,7 +998,9 @@
         // data - it exists purely so that if the cloud is briefly unreachable, this device still has
         // the last-known-good data to fall back on instead of showing a blank screen.
         const LOCAL_BACKUP_KEY = 'geethara_credit_localBackup_v1';
-        function saveLocalSafetyNet() {
+        let _lsT = null;
+        function saveLocalSafetyNet() { clearTimeout(_lsT); _lsT = setTimeout(_saveLocalSafetyNetNow, 1200); }
+        function _saveLocalSafetyNetNow() {
             try { localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify({ db: dbCache, exp: expCache, dbVersion, expVersion, savedAt: new Date().toISOString() })); }
             catch (e) { console.error('Local safety-net save failed:', e); }
         }
@@ -1296,7 +1300,7 @@
                 dbVersion = (snap.exists && typeof snap.data()._v === 'number') ? snap.data()._v : 0;
                 saveLocalSafetyNet();
                 if (firstBillsLoad) { firstBillsLoad = false; boot(); }
-                else { renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs(); if(document.getElementById('addBillsDateFilter')) renderAddBillsHistory(); if(document.getElementById('collectionsDateFilter')) renderCollectionsHistory(); }
+                else { scheduleFullRender(); }
             }, e => handleSyncError(e));
 
             REF_EXP().onSnapshot(snap => {
@@ -1395,7 +1399,7 @@
             if (mappedRep) { document.getElementById('p_addRep').value = mappedRep; return; }
 
             const outlet = document.getElementById('p_addOutlet') ? document.getElementById('p_addOutlet').value.toUpperCase() : '';
-            const db = getDB(); let repFound = false;
+            const db = dbCache; let repFound = false;
             if(outlet) {
                 for (let i = db.length - 1; i >= 0; i--) {
                     if (db[i].outlet === outlet && db[i].repName && db[i].repName !== 'AI' && db[i].repName !== 'Excel Import' && db[i].repName !== 'System') {
@@ -1432,6 +1436,7 @@
         }
 
         function initUI(keepState) {
+            document.body.classList.toggle('pro-on', isPro());
             const dS = document.getElementById('p_addStreet');
             dS.innerHTML = '';
             streets.forEach(s => { dS.innerHTML += `<option value="${s}">${s}</option>`; });
@@ -1459,7 +1464,7 @@
         }
 
         function setStreet(streetName, btn) { 
-            activeStreet = streetName; saveActiveStreet();
+            activeStreet = streetName; saveActiveStreet(); masLimit = MAS_PAGE; colLimit = MAS_PAGE; chqLimit = CHQ_PAGE;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-theme-light', 'text-theme')); 
             btn.classList.add('active', 'bg-theme-light', 'text-theme'); 
             
@@ -1475,6 +1480,7 @@
         
         function nav(pageId) { 
             document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById('page-' + pageId).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-theme-light', 'text-theme', 'font-bold')); 
             document.getElementById('nav-' + pageId).classList.add('bg-theme-light', 'text-theme', 'font-bold'); 
             
@@ -1489,9 +1495,9 @@
             if(pageId === 'audit') renderAudit();
             if(pageId === 'routesManage') renderRoutesManager(); // New Route manager
             if(pageId === 'shopNames') renderShopNames();
+            if(pageId === 'addBills') renderAddBillsHistory();
             if(pageId === 'insights') renderInsights();
             
-            document.getElementById('page-' + pageId).classList.remove('hidden');
         }
         
         function applySettings() { const set = getSettings();
@@ -1502,7 +1508,8 @@
         function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err=>{}); } else { if (document.exitFullscreen) { document.exitFullscreen(); } } }
 
 
-        function updateAutocomplete() { const db = getDB();
+        let _acSrc = null;
+        function updateAutocomplete() { if (_acSrc === dbCache) return; _acSrc = dbCache; const db = dbCache;
             const uniqueOutlets = [...new Set(db.map(i => i.outlet))]; document.getElementById('outletAutoList').innerHTML = uniqueOutlets.map(o => `<option value="${o}">`).join('');
         }
 
@@ -1773,17 +1780,18 @@
             });
         }
 
-        function fuzzyMatch(str, pattern) { pattern = pattern.split('').reduce((a, b) => a + ".*" + b); return (new RegExp(pattern, 'i')).test(str); }
+        function fuzzyMatch(str, pattern) { const n = pattern.length; if (!n) return true; let j = 0; for (let i = 0; i < str.length && j < n; i++) { if (str.charCodeAt(i) === pattern.charCodeAt(j)) j++; } return j === n; }
         
         function handleSearch() { 
             const sVal = document.getElementById('globalSearch').value;
             document.getElementById('clearSearchIcon').classList.toggle('hidden', sVal === ''); 
             clearTimeout(searchTimeout); 
-            searchTimeout = setTimeout(() => { currentSearch = sVal.toLowerCase(); renderTables(); renderCheques(); }, 100);
+            searchTimeout = setTimeout(() => { currentSearch = sVal.toLowerCase(); masLimit = MAS_PAGE; colLimit = MAS_PAGE; chqLimit = CHQ_PAGE; renderTables(); renderCheques(); }, 40);
         }
         
         function clearGlobalSearch() { document.getElementById('globalSearch').value = ''; handleSearch(); document.getElementById('globalSearch').focus(); }
-        const hl = (text) => { if(!currentSearch) return text; const regex = new RegExp(`(${currentSearch})`, "gi"); return String(text).replace(regex, `<span class="highlight">$1</span>`); };
+        let _hlRe = null, _hlFor = '';
+        const hl = (text) => { if(!currentSearch) return text; if(_hlFor !== currentSearch) { _hlFor = currentSearch; _hlRe = new RegExp('(' + currentSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'); } return String(text).replace(_hlRe, '<span class="highlight">$1</span>'); };
         
         function filterByShopName(shopName) { nav('masterData'); document.getElementById('globalSearch').value = shopName; document.getElementById('filterStatus').value = 'All'; document.getElementById('filterFrom').value = ''; document.getElementById('filterTo').value = ''; if(document.getElementById('filterAuditStatus')) document.getElementById('filterAuditStatus').value='All'; if(document.getElementById('filterAuditFrom')) document.getElementById('filterAuditFrom').value=''; if(document.getElementById('filterAuditTo')) document.getElementById('filterAuditTo').value=''; handleSearch(); }
         function sortData(col) { if(sortColumn === col) sortAscending = !sortAscending; else { sortColumn = col; sortAscending = true; } renderTables(); }
@@ -1842,7 +1850,8 @@
         function sortCheques(col) { if(sortColCheque === col) sortAscCheque = !sortAscCheque; else { sortColCheque = col; sortAscCheque = true; } renderCheques(); }
 
         function renderCheques() {
-            const db = getDB(); let chequeList = [];
+            if (!isPageVisible('page-cheques')) return;
+            const db = dbCache; let chequeList = [];
 
             db.forEach(b => {
                 if(b.installments) {
@@ -1870,11 +1879,11 @@
                 if(sortColCheque === 'amt') { valA = a.amt; valB = b.amt; }
                 if(valA < valB) return sortAscCheque ? -1 : 1; if(valA > valB) return sortAscCheque ? 1 : -1; return 0;
             });
-            let tbody = document.getElementById('chequesBody'); let total = 0; let html = '';
+            let tbody = document.getElementById('chequesBody'); let total = chequeList.reduce((s, c) => s + c.amt, 0); let html = '';
             if(chequeList.length === 0) { html = `<tr><td colspan="6" class="p-6 text-center text-gray-400 italic">No cheque records found for selected criteria.</td></tr>`; } 
             else {
-                chequeList.forEach(c => {
-                    total += c.amt; let isPending = c.bankDate >= today; let dateColor = isPending ? 'text-red-500' : 'text-green-600';
+                chequeList.slice(0, chqLimit).forEach(c => {
+                    let isPending = c.bankDate >= today; let dateColor = isPending ? 'text-red-500' : 'text-green-600';
                     let statusDot = isPending ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block mr-1"></span>' : '<span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block mr-1"></span>';
                     let actionCell = c.returned
                         ? `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap"><i class="fas fa-undo"></i> RETURNED</span>`
@@ -1890,6 +1899,7 @@
                 });
             }
 
+            if (chequeList.length > chqLimit) html += `<tr class="no-print"><td colspan="6" class="p-4 text-center"><button onclick="chqLimit+=400;renderCheques()" class="bg-theme text-white px-5 py-2 rounded-xl font-bold text-sm">Show more (${chequeList.length - chqLimit} remaining)</button> <button onclick="chqLimit=1e9;renderCheques()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold text-sm">Show all</button></td></tr>`;
             if(tbody) tbody.innerHTML = html;
             let totalEl = document.getElementById('chequesTotal'); if(totalEl) totalEl.innerText = `Rs. ${fmt(total)}`;
             let countEl = document.getElementById('chequesCount'); if(countEl) countEl.innerText = chequeList.length;
@@ -1910,7 +1920,7 @@
         }
 
         function renderTables() {
-            let db = getDB();
+            let db = dbCache.slice();
             if(!currentSearch && activeStreet !== 'All') db = db.filter(i => i.street === activeStreet);
             
             const statFilter = document.getElementById('filterStatus')?.value || 'All'; const todayDate = new Date();
@@ -1942,12 +1952,14 @@
             currentlyFilteredData = db; 
 
             let tC = 0, tCol = 0, pendingCount = 0; let mHtmlStr = ''; let cHtmlStr = '';
-            const fullDB = getDB(); const outletTotals = {}; let sysCred = 0, sysCol = 0;
+            const fullDB = dbCache; const outletTotals = {}; let sysCred = 0, sysCol = 0;
             fullDB.forEach(i => { outletTotals[i.outlet] = (outletTotals[i.outlet] || 0) + i.collected; sysCred += i.credit; sysCol += i.collected; });
+            const wantMas = isPageVisible('page-masterData'), wantCol = isPageVisible('page-collections'); let masShown = 0, colShown = 0;
             db.forEach(item => {
                 tC += item.credit; tCol += item.collected;
                 let cartAmt = pendingColCart.filter(c => c.id === item.id).reduce((s,a) => s+a.amt, 0);
                 const actualBal = item.credit - item.collected; const visualBal = actualBal - cartAmt;
+                if (!(wantMas && masShown < masLimit) && !(wantCol && colShown < colLimit && visualBal > 0 && (activeStreet === 'All' || item.street === activeStreet))) { if (visualBal > 0 && (activeStreet === 'All' || item.street === activeStreet)) pendingCount++; return; }
                 const statBadge = actualBal <= 0 ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold text-[8px] md:text-[10px]">PAID</span>` : `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold text-[8px] md:text-[10px]">DUE</span>`;
                 
                 let totalPaidEver = outletTotals[item.outlet] || 0; let vipBadge = '';
@@ -1964,7 +1976,7 @@
                 }
                 audHTML += `</div>`;
                 const bulkChkHTML = isSuperAdmin() ? `<td class="p-2 md:p-3 text-center no-print"><input type="checkbox" class="bulkDateChk w-4 h-4 cursor-pointer" data-id="${item.id}" ${bulkSelectedIds.has(item.id)?'checked':''} onchange="toggleBulkSelect('${item.id}', this.checked)"></td>` : '';
-                mHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition ${actualBal<=0?'opacity-60':''} ${rowClass}">
+                if (wantMas && masShown++ < masLimit) mHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition ${actualBal<=0?'opacity-60':''} ${rowClass}">
                     ${bulkChkHTML}
                     <td class="p-2 md:p-3 text-[10px] md:text-xs col-date">${hl(item.date)}</td><td class="p-2 md:p-3 font-bold text-xs md:text-sm col-billno">${hl(item.billNo || '-')}</td>
                     <td class="p-2 md:p-3 font-semibold text-theme cursor-pointer hover:underline text-xs md:text-sm col-outlet" title="Click to view all history for this shop" onclick="filterByShopName('${item.outlet.replace(/'/g, "\\'")}')">${hl(item.outlet)}</td>
@@ -1974,7 +1986,7 @@
                     <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 max-w-[160px] whitespace-normal col-remarks">${item.remarks ? hl(item.remarks) : '<span class="text-gray-300 italic">-</span>'}</td>
                     <td class="p-2 md:p-3 text-center no-print col-audit">${audHTML}</td>
                     <td class="p-2 md:p-3 text-center flex gap-1 justify-center no-print col-actions">
-                        <button data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)" class="w-6 h-6 md:w-7 md:h-7 rounded bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white transition text-xs" title="Shop Profile / Limit / Promises"><i class="fas fa-store"></i></button>
+                        <button data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)" class="pro-only w-6 h-6 md:w-7 md:h-7 rounded bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white transition text-xs" title="Shop Profile / Limit / Promises"><i class="fas fa-store"></i></button>
                         <button onclick="shareViaWhatsApp('${item.outlet.replace(/'/g, "\\'")}', '${actualBal}', '${item.billNo}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition text-xs" title="WhatsApp Reminder"><i class="fab fa-whatsapp"></i></button>
                         <button onclick="viewInvoice('${item.id}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-blue-50 text-theme hover:bg-theme hover:text-white transition text-xs"><i class="fas fa-eye"></i></button>
                         <button onclick="openEditModal('${item.id}')" class="admin-only w-6 h-6 md:w-7 md:h-7 rounded bg-yellow-50 text-yellow-600 hover:bg-yellow-600 hover:text-white transition text-xs"><i class="fas fa-pen"></i></button>
@@ -1982,18 +1994,18 @@
                     </td></tr>`;
                 if(visualBal > 0 && (activeStreet === 'All' || item.street === activeStreet)) { 
                     pendingCount++;
-                    cHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition">
+                    if (wantCol && colShown++ < colLimit) cHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                         <td class="p-2 md:p-4 text-[10px] md:text-sm text-gray-500">${item.date}</td><td class="p-2 md:p-4 font-bold text-xs md:text-sm">${item.billNo||'-'}</td>
-                        <td class="p-2 md:p-4 font-semibold text-theme text-xs md:text-sm"><span class="cursor-pointer hover:underline" data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)">${item.outlet} <i class="fas fa-store text-[10px] opacity-60"></i></span> <br><span class="text-[9px] text-gray-400">${item.street}</span></td><td class="p-2 md:p-4 text-right font-extrabold text-red-500 text-sm md:text-lg">Rs. ${fmt(visualBal)}</td>
+                        <td class="p-2 md:p-4 font-semibold text-theme text-xs md:text-sm"><span class="cursor-pointer hover:underline" data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)">${item.outlet} <i class="pro-only fas fa-store text-[10px] opacity-60"></i></span> <br><span class="text-[9px] text-gray-400">${item.street}</span></td><td class="p-2 md:p-4 text-right font-extrabold text-red-500 text-sm md:text-lg">Rs. ${fmt(visualBal)}</td>
                         <td class="p-2 md:p-4 text-center no-print"><button onclick="openPay('${item.id}', '${item.outlet.replace(/'/g, "\\'")}', ${visualBal})" class="bg-green-100 text-green-700 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-green-600 hover:text-white transition shadow-sm"><i class="fas fa-plus"></i> Queue</button></td>
                     </tr>`;
                 }
             });
 
             if(document.getElementById('thBulkSelect')) document.getElementById('thBulkSelect').classList.toggle('hidden', !isSuperAdmin());
-            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="${isSuperAdmin() ? 12 : 11}" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr;
+            if(document.getElementById('masBody')) document.getElementById('masBody').innerHTML = db.length === 0 ? `<tr><td colspan="${isSuperAdmin() ? 12 : 11}" class="p-10 text-center text-gray-400">No records found.</td></tr>` : mHtmlStr + (db.length > masLimit ? `<tr><td colspan="12" class="p-4 text-center"><button onclick="masLimit+=300;renderTables()" class="bg-theme text-white px-5 py-2 rounded-xl font-bold text-sm">Show more (${db.length - masLimit} remaining)</button> <button onclick="masLimit=1e9;renderTables()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold text-sm">Show all</button></td></tr>` : '');
             updateBulkSelectUI();
-            if(document.getElementById('colBody')) document.getElementById('colBody').innerHTML = pendingCount === 0 ? `<tr><td colspan="5" class="p-10 text-center text-green-500">No pending collections here.</td></tr>` : cHtmlStr;
+            if(document.getElementById('colBody')) document.getElementById('colBody').innerHTML = pendingCount === 0 ? `<tr><td colspan="5" class="p-10 text-center text-green-500">No pending collections here.</td></tr>` : cHtmlStr + (pendingCount > colLimit ? `<tr><td colspan="5" class="p-4 text-center"><button onclick="colLimit+=300;renderTables()" class="bg-theme text-white px-5 py-2 rounded-xl font-bold text-sm">Show more (${pendingCount - colLimit} remaining)</button></td></tr>` : '');
             const getStatHTML = (c, cl, b, sc, scl, sb) => `
                 <div class="glass p-2 md:p-3 rounded-xl border-l-4 border-indigo-500 bg-indigo-50/30 flex flex-col justify-center"><p class="text-[9px] font-bold text-indigo-500 uppercase leading-tight">System Credit</p><h4 class="text-xs sm:text-sm md:text-md font-bold text-indigo-600 mt-0.5">Rs. ${fmt(sc)}</h4></div>
                 <div class="glass p-2 md:p-3 rounded-xl border-l-4 border-emerald-500 bg-emerald-50/30 flex flex-col justify-center"><p class="text-[9px] font-bold text-emerald-500 uppercase leading-tight">System Collected</p><h4 class="text-xs sm:text-sm md:text-md font-bold text-emerald-600 mt-0.5">Rs. ${fmt(scl)}</h4></div>
@@ -2005,10 +2017,9 @@
             if(document.getElementById('colStats')) document.getElementById('colStats').innerHTML = getStatHTML(tC, tCol, tC-tCol, sysCred, sysCol, sysCred-sysCol);
             if(document.getElementById('masStats')) document.getElementById('masStats').innerHTML = getStatHTML(tC, tCol, tC-tCol, sysCred, sysCol, sysCred-sysCol);
             document.getElementById('colCount').innerText = pendingCount;
-            
-            if(document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
-            if(document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
-            applyColumnVisibility();
+            if (isPageVisible('page-addBills')) renderAddBillsHistory();
+            if (wantCol) renderCollectionsHistory();
+            if (wantMas) applyColumnVisibility();
         }
 
         function clearFilters() { document.getElementById('globalSearch').value = ''; document.getElementById('clearSearchIcon').classList.add('hidden'); currentSearch = ''; document.getElementById('filterStatus').value='All'; document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; if(document.getElementById('filterAuditStatus')) document.getElementById('filterAuditStatus').value='All'; if(document.getElementById('filterAuditFrom')) document.getElementById('filterAuditFrom').value=''; if(document.getElementById('filterAuditTo')) document.getElementById('filterAuditTo').value=''; renderTables(); renderCheques(); }
@@ -2076,11 +2087,12 @@
         }
 
         function renderAddBillsHistory() {
+            if (!isPageVisible('page-addBills')) return;
             const date = document.getElementById('addBillsDateFilter').value;
             const tbody = document.getElementById('addBillsHistoryBody');
             if (!date) { tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400 italic">Select a date to view history.</td></tr>`; return; }
             
-            const db = getDB();
+            const db = dbCache;
             const filtered = activeStreet === 'All' ? db.filter(b => b.date === date) : db.filter(b => b.date === date && b.street === activeStreet);
             if (filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400 italic">No bills issued on ${date} ${activeStreet === 'All' ? 'across all routes' : 'for ' + activeStreet}.</td></tr>`; return; }
             
@@ -2110,11 +2122,12 @@
         }
 
         function renderCollectionsHistory() {
+            if (!isPageVisible('page-collections')) return;
             const date = document.getElementById('collectionsDateFilter').value;
             const tbody = document.getElementById('collectionsHistoryBody');
             if (!date) { tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400 italic">Select a date to view history.</td></tr>`; return; }
             
-            const db = getDB(); let html = ''; let totalPaid = 0; let found = false;
+            const db = dbCache; let html = ''; let totalPaid = 0; let found = false;
             db.forEach(b => {
                 if ((activeStreet === 'All' || b.street === activeStreet) && b.installments) {
                     b.installments.forEach(ins => {
@@ -2413,8 +2426,8 @@
         }
 
         function renderDashboard() {
-            const db = getDB();
-            const exps = getExp(); const today = new Date().toISOString().split('T')[0];
+            const db = dbCache;
+            const exps = expCache; const today = new Date().toISOString().split('T')[0];
             let sysCred = 0, sysCol = 0, tCol = 0, tExp = 0;
             const sData = streets.map(s => { return {street: s, c: 0, cl: 0}; });
             db.forEach(i => {
@@ -2603,10 +2616,11 @@
 
 
         function triggerExcel() { document.getElementById('excelUpload').click(); }
-        function exportToPDF() { const element = document.getElementById('pdfArea');
+        function printAllMaster() { masLimit = 1e9; renderTables(); setTimeout(() => { window.print(); masLimit = MAS_PAGE; renderTables(); }, 60); }
+        function exportToPDF() { masLimit = 1e9; renderTables(); const element = document.getElementById('pdfArea');
             Toast.fire({icon: 'info', title: 'Generating PDF...'});
             const opt = { margin: 0.2, filename: 'Report.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => { masLimit = MAS_PAGE; renderTables(); });
         }
         function backupDB() { const data = JSON.stringify({ db: getDB(), exp: getExp(), extras: extrasCache });
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = `Geethara_Backup_${localToday()}.json`; a.click(); try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch(e) {} refreshAlertBadge(); logAction("System Backup Downloaded");
@@ -2679,6 +2693,14 @@
         // ★★★ v11 ENHANCEMENTS (added) ★★★
         // Core helpers, extras store (shop profiles / promises / settings), shop index
         // =====================================================================
+        const PRO_USERS = ['ashinsasathsara@gmail.com', '1234kumarika@gmail.com'];
+        const isPro = () => PRO_USERS.includes(String(currentUserEmail || '').toLowerCase());
+        const MAS_PAGE = 150, CHQ_PAGE = 200; let masLimit = MAS_PAGE, colLimit = MAS_PAGE, chqLimit = CHQ_PAGE;
+        let _rfT = null;
+        function scheduleFullRender() {
+            if (_rfT) return;
+            _rfT = requestAnimationFrame(() => { _rfT = null; try { renderTables(); renderCheques(); renderDashboard(); updateAutocomplete(); rebuildStreetTabs(); renderAddBillsHistory(); renderCollectionsHistory(); if (isPageVisible('page-shopNames')) renderShopNames(); } catch (e) { console.error(e); } });
+        }
         const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const normName = s => String(s == null ? '' : s).toUpperCase().replace(/\s+/g, ' ').trim();
         const num = v => Number(v) || 0;
@@ -2709,7 +2731,7 @@
         function setPromise(p) { extrasCache.promises[p.id] = p; persistExtrasLocal(); extrasWrite({ promises: { [p.id]: p } }); }
         function deletePromiseRec(id) { delete extrasCache.promises[id]; persistExtrasLocal(); extrasWrite({ promises: { [id]: firebase.firestore.FieldValue.delete() } }); }
         let extrasListenerOn = false;
-        function attachExtrasListener() {
+        function attachExtrasListener() { if (!isPro()) return;
             if (extrasListenerOn) return; extrasListenerOn = true;
             try {
                 REF_EXTRAS().onSnapshot(snap => {
@@ -3008,7 +3030,7 @@
         // ADD-BILL GUARDS: live shop info strip, typo guard, duplicate bill no, credit limit, watch-list
         // =====================================================================
         const acceptedNewNames = new Set();
-        function updateOutletInfo() {
+        function updateOutletInfo() { if (!isPro()) return;
             const strip = document.getElementById('outletInfoStrip'); const inp = document.getElementById('p_addOutlet'); if (!strip || !inp) return;
             const t = normName(inp.value); if (!t) { strip.classList.add('hidden'); strip.innerHTML = ''; return; }
             const s = shopStat(t); strip.classList.remove('hidden');
@@ -3031,7 +3053,7 @@
         }
         function useSuggestedOutlet(name) { const i = document.getElementById('p_addOutlet'); i.value = name; updateAutoRep(); saveDraft(); updateOutletInfo(); i.focus(); }
 
-        async function addToPendingCart() {
+        async function addToPendingCart() { if (!isPro()) return addToPendingCartCore();
             const oEl = document.getElementById('p_addOutlet');
             const o0 = oEl.value.trim(); const bill0 = document.getElementById('p_addBillNo').value.trim(); const c = parseFloat(document.getElementById('p_addCredit').value);
             if (!o0 || isNaN(c) || c <= 0) return addToPendingCartCore(); // core shows the validation error
@@ -3070,7 +3092,7 @@
         // SHOP 360 PROFILE (contact, credit limit, watch-list, promises, statement, reminders)
         // =====================================================================
         let s360Current = '';
-        function openShop360(name) {
+        function openShop360(name) { if (!isPro()) return;
             const n = normName(name); if (!n) return;
             s360Current = n; renderShop360();
             const m = document.getElementById('modal-shop360'); m.classList.remove('hidden');
@@ -3198,18 +3220,20 @@
             }
             return out;
         }
-        function refreshAlertBadge() {
+        let _badgeT = null;
+        function refreshAlertBadge() { if (!isPro()) return; clearTimeout(_badgeT); _badgeT = setTimeout(_doBadge, 400); }
+        function _doBadge() {
             const b = document.getElementById('alertBadge'); if (!b) return;
             let n = 0; try { n = computeAlerts(false).filter(a => a.lv !== 'blue').length; } catch (e) {}
             b.innerText = n; b.classList.toggle('hidden', n === 0);
         }
-        function openAlerts() {
+        function openAlerts() { if (!isPro()) return;
             const list = computeAlerts(true); const col = { red: 'bg-red-50 text-red-700 border-red-200', amber: 'bg-orange-50 text-orange-700 border-orange-200', blue: 'bg-blue-50 text-blue-700 border-blue-200' };
             const html = list.length ? list.map((a, i) => `<div onclick="Swal.close();${a.go}" class="cursor-pointer flex items-center gap-3 p-3 rounded-xl border text-left text-sm font-semibold mb-2 ${col[a.lv]}"><i class="fas ${a.icon} text-lg w-6 text-center"></i><span class="flex-1">${a.text}</span><i class="fas fa-chevron-right text-xs opacity-50"></i></div>`).join('') : `<p class="text-green-600 font-bold p-4"><i class="fas fa-check-circle text-3xl block mb-2"></i>සියල්ල හොඳින්! අවධානය අවශ්‍ය දෙයක් නැත.</p>`;
             Swal.fire({ title: '🔔 Smart Alerts', html, showConfirmButton: false, showCloseButton: true, width: 560 });
         }
 
-        function renderDashboardExtras() {
+        function renderDashboardExtras() { if (!isPro()) return;
             const page = document.getElementById('page-dashboard'); if (!page) return;
             let box = document.getElementById('dashExtras'); if (!box) { box = document.createElement('div'); box.id = 'dashExtras'; box.className = 'space-y-6'; page.appendChild(box); }
             const today = localToday(); const idx = getShopIndex(); const target = getDailyTarget();
@@ -3258,9 +3282,9 @@
         ];
         let insTab = null, insChart = null, insDebtQ = '', insDayDate = '', insSheetRoute = '', insSheetSort = 'age', cashCounts = {}, cashOpening = 0;
         const insAllowed = () => INS_TABS.filter(t => role === 'Admin' || !t.admin);
-        function openInsights(tab) { insTab = tab; nav('insights'); }
+        function openInsights(tab) { if (!isPro()) return; insTab = tab; nav('insights'); }
         function insSetTab(t) { insTab = t; renderInsights(); }
-        function renderInsights() {
+        function renderInsights() { if (!isPro()) return;
             const tabsEl = document.getElementById('insTabs'); const body = document.getElementById('insBody'); if (!tabsEl || !body) return;
             const allowed = insAllowed(); if (!insTab || !allowed.some(t => t.id === insTab)) insTab = allowed[0].id;
             tabsEl.innerHTML = allowed.map(t => `<button onclick="insSetTab('${t.id}')" class="px-3 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition ${t.id === insTab ? 'bg-theme text-white shadow' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'}"><i class="fas ${t.icon} mr-1"></i>${t.label}</button>`).join('');
@@ -3433,7 +3457,7 @@
             return res;
         }
         function openCmdPalette() {
-            if (document.getElementById('cmdPalette') || !role) return;
+            if (document.getElementById('cmdPalette') || !role || !isPro()) return;
             const ov = document.createElement('div'); ov.id = 'cmdPalette'; ov.className = 'fixed inset-0 z-[150] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center pt-[10vh] px-3';
             ov.innerHTML = `<div class="panel w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden"><div class="p-3 border-b flex items-center gap-2"><i class="fas fa-search text-gray-400"></i><input id="cmdInput" autocomplete="off" placeholder="Search shops, bill no, pages, actions..." class="flex-1 outline-none bg-transparent text-sm md:text-base"><kbd class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Esc</kbd></div><div id="cmdList" class="max-h-[55vh] overflow-y-auto"></div></div>`;
             ov.addEventListener('click', e => { if (e.target === ov) closeCmdPalette(); }); document.body.appendChild(ov);
@@ -3459,7 +3483,7 @@
         let _recog = null;
         const getVoiceLang = () => { try { return localStorage.getItem('geethara_voice_lang') || 'en-US'; } catch (e) { return 'en-US'; } };
         function toggleVoiceLang() { const n = getVoiceLang() === 'en-US' ? 'si-LK' : 'en-US'; try { localStorage.setItem('geethara_voice_lang', n); } catch (e) {} Toast.fire({ icon: 'success', title: n === 'si-LK' ? 'Voice: සිංහල' : 'Voice: English' }); }
-        function startVoice(id, cb) {
+        function startVoice(id, cb) { if (!isPro()) { Toast.fire({icon: 'info', title: 'Voice command not fully supported yet.'}); return; }
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SR) return Swal.fire('Not supported', 'Voice typing needs Google Chrome / Edge (or Chrome on Android).', 'info');
             if (_recog) { try { _recog.stop(); } catch (e) {} _recog = null; return; }
@@ -3495,7 +3519,7 @@
             Toast.fire({ icon: 'success', title: 'PIN saved' });
         }
         function lockApp() {
-            if (!role) return; if (!hasLockPin()) { Swal.fire({ icon: 'info', title: 'Set a PIN first', text: 'Create a PIN to use App Lock.', confirmButtonText: 'Set PIN' }).then(r => { if (r.isConfirmed) setLockPin(); }); return; }
+            if (!role || !isPro()) return; if (!hasLockPin()) { Swal.fire({ icon: 'info', title: 'Set a PIN first', text: 'Create a PIN to use App Lock.', confirmButtonText: 'Set PIN' }).then(r => { if (r.isConfirmed) setLockPin(); }); return; }
             appLocked = true; const s = document.getElementById('lockScreen'); s.classList.remove('hidden'); const i = document.getElementById('lockPinInput'); i.value = ''; setTimeout(() => i.focus(), 50); document.getElementById('lockMsg').innerText = '';
         }
         async function tryUnlock() {
@@ -3504,7 +3528,7 @@
             else { document.getElementById('lockMsg').innerText = 'වැරදි PIN අංකයකි'; i.value = ''; i.focus(); }
         }
         function lockForgot() { Swal.fire({ title: 'PIN අමතකද?', text: 'Sign out වී Google ගිණුමෙන් නැවත ඇතුළු වන්න. PIN එක ඉවත් කරනු ලැබේ.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sign out & reset PIN' }).then(r => { if (r.isConfirmed) { try { localStorage.removeItem(LOCK_PIN_KEY); } catch (e) {} appLocked = false; document.getElementById('lockScreen').classList.add('hidden'); auth.signOut(); } }); }
-        function startIdleLock() {
+        function startIdleLock() { if (!isPro()) return;
             if (lockTimerOn) return; lockTimerOn = true;
             ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(ev => window.addEventListener(ev, () => { if (!appLocked) lastActivity = Date.now(); }, { passive: true }));
             setInterval(() => { const m = lockMinutes(); if (role && !appLocked && hasLockPin() && m > 0 && Date.now() - lastActivity > m * 60000) lockApp(); }, 15000);
@@ -3513,7 +3537,7 @@
         // =====================================================================
         // SETTINGS & HEALTH (header profile button)
         // =====================================================================
-        function openSettings() {
+        function openSettings() { if (!isPro()) return;
             const set = getSettings(); const admin = role === 'Admin'; const ba = backupAgeDays();
             let kb = 0; try { kb = Math.round(new Blob([JSON.stringify(dbCache)]).size / 1024); } catch (e) {}
             Swal.fire({ title: '⚙️ Settings & Health', width: 560, showCancelButton: true, confirmButtonText: 'Save', html: `<div class="text-left space-y-3 text-sm">
@@ -3527,10 +3551,10 @@
                 setExtraSetting('dailyTarget', v.target || 0); renderDashboardExtras(); Toast.fire({ icon: 'success', title: 'Settings saved' });
             });
         }
-        function showShortcuts() { const k = t => `<kbd class="bg-gray-200 text-gray-700 px-2 py-1 rounded">${t}</kbd>`; Swal.fire({ title: '⌨️ Keyboard Shortcuts', html: `<div class="text-left space-y-2 text-sm"><p>${k('Ctrl')} + ${k('K')} : Command Palette (search anything)</p><p>${k('Ctrl')} + ${k('S')} : Save Pending Bills/Payments</p><p>${k('Ctrl')} + ${k('F')} : Focus Smart Search</p><p>${k('Ctrl')} + ${k('Z')} / ${k('Y')} : Undo / Redo</p><p>${k('Alt')} + ${k('L')} : Lock App</p><p>${k('Shift')} + ${k('?')} : This menu</p></div>`, confirmButtonColor: '#3b82f6' }); }
+        function showShortcuts() { const k = t => `<kbd class="bg-gray-200 text-gray-700 px-2 py-1 rounded">${t}</kbd>`; Swal.fire({ title: '⌨️ Keyboard Shortcuts', html: `<div class="text-left space-y-2 text-sm">${isPro() ? `<p>${k('Ctrl')} + ${k('K')} : Command Palette (search anything)</p>` : ''}<p>${k('Ctrl')} + ${k('S')} : Save Pending Bills/Payments</p><p>${k('Ctrl')} + ${k('F')} : Focus Smart Search</p><p>${k('Ctrl')} + ${k('Z')} / ${k('Y')} : Undo / Redo</p>${isPro() ? `<p>${k('Alt')} + ${k('L')} : Lock App</p>` : ''}<p>${k('Shift')} + ${k('?')} : This menu</p></div>`, confirmButtonColor: '#3b82f6' }); }
         document.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); if (document.getElementById('cmdPalette')) closeCmdPalette(); else openCmdPalette(); }
-            if (e.altKey && e.key.toLowerCase() === 'l') { e.preventDefault(); lockApp(); }
+            if (isPro() && e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); if (document.getElementById('cmdPalette')) closeCmdPalette(); else openCmdPalette(); }
+            if (isPro() && e.altKey && e.key.toLowerCase() === 'l') { e.preventDefault(); lockApp(); }
             if (e.key === 'Escape') { closeCmdPalette(); }
         });
 
@@ -3539,10 +3563,10 @@
         // =====================================================================
         (function () {
             const _rd = renderDashboard;
-            renderDashboard = function () { _rd.apply(this, arguments); try { if (role === 'Admin') renderDashboardExtras(); refreshAlertBadge(); } catch (e) { console.error(e); } };
+            renderDashboard = function () { try { if (isPageVisible('page-dashboard')) { _rd.apply(this, arguments); if (role === 'Admin') renderDashboardExtras(); } refreshAlertBadge(); } catch (e) { console.error(e); } };
         })();
         let appReadyDone = false;
-        function onAppReady() {
+        function onAppReady() { if (!isPro()) return;
             try { refreshAlertBadge(); startIdleLock(); } catch (e) { console.error(e); }
             if (!appReadyDone) {
                 appReadyDone = true;
