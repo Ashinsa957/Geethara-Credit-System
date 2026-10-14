@@ -91,6 +91,25 @@
             #invoiceModalBox, #modal-invoice { overflow: visible !important; max-height: none !important; height: auto !important; position: static !important; }
             .no-print { display: none !important; }
         }
+
+        /* ===== v11 additions ===== */
+        .panel { background: #ffffff; color: #1f2937; }
+        .dark-mode .panel { background: #1e293b; color: #e2e8f0; }
+        .dark-mode .panel .border-b, .dark-mode .panel .border-t { border-color: #334155; }
+        .subpanel { background: #f8fafc; }
+        .dark-mode .subpanel { background: #0f172a; }
+        .dark-mode .panel input, .dark-mode .panel select { background-color: #0f172a; border-color: #475569; color: #fff; }
+        .pay-chip { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 6px; border-radius: 14px; border: 2px solid #bbf7d0; background: #f0fdf4; color: #166534; transition: all .15s; cursor: pointer; }
+        .pay-chip:hover { background: #22c55e; color: #fff; border-color: #22c55e; transform: translateY(-1px); }
+        .pay-chip-amt { font-weight: 800; font-size: 15px; line-height: 1.2; }
+        .pay-chip-tag { font-size: 9.5px; font-weight: 600; opacity: .75; }
+        .dark-mode .pay-chip { background: #052e16; border-color: #166534; color: #bbf7d0; }
+        .sn-changed { background: rgba(34, 197, 94, 0.12); }
+        .sn-changed .sn-input { border-color: #22c55e; }
+        .mic-on { color: #ef4444 !important; animation: micPulse 1s infinite; }
+        @keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+        .cmd-active { background: var(--primary-light); }
+        .dark-mode .cmd-item:hover { background: #334155; }
     </style>
 </head>
 <body class="overflow-x-hidden" id="dropZone">
@@ -144,6 +163,9 @@
                 </div>
 
                 <div class="flex items-center gap-1 md:gap-3 shrink-0">
+                    <button onclick="openCmdPalette()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Command Palette (Ctrl+K)"><i class="fas fa-terminal"></i></button>
+                    <button onclick="openAlerts()" class="relative flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Smart Alerts"><i class="fas fa-bell"></i><span id="alertBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button>
+                    <button onclick="lockApp()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Lock App (Alt+L)"><i class="fas fa-lock"></i></button>
                     <button onclick="showShortcuts()" class="hidden sm:flex w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 items-center justify-center transition text-gray-600 dark:text-gray-300" title="Shortcuts (Shift+?)"><i class="fas fa-keyboard"></i></button>
                     <button onclick="toggleFullScreen()" class="w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center transition text-gray-600 dark:text-gray-300" title="Focus Mode"><i class="fas fa-expand"></i></button>
                     <button onclick="toggleTheme()" class="w-8 h-8 md:w-10 md:h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center transition text-gray-600 dark:text-gray-300"><i class="fas fa-moon"></i></button>
@@ -169,6 +191,8 @@
                 <button onclick="nav('expenses')" id="nav-expenses" class="nav-item flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-wallet w-5 text-lg"></i> Expenses</button>
                 <button onclick="nav('routesManage')" id="nav-routesManage" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-map-marked-alt w-5 text-lg"></i> Manage Routes & Reps</button>
                 <button onclick="nav('audit')" id="nav-audit" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-history w-5 text-lg"></i> Audit Trail</button>
+                <button onclick="nav('insights')" id="nav-insights" class="nav-item flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-chart-line w-5 text-lg"></i> Insights & Reports</button>
+                <button onclick="nav('shopNames')" id="nav-shopNames" class="nav-item admin-only flex items-center gap-4 px-5 py-3.5 rounded-2xl text-left text-sm font-medium transition-all hover:bg-theme-light hover:text-theme dark:hover:bg-slate-800 text-gray-600"><i class="fas fa-spell-check w-5 text-lg"></i> Shop Names Editor</button>
                 
                 <div class="admin-only mt-6 relative" id="dragDropArea">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-4 mb-2">Tools & Data</p>
@@ -259,17 +283,18 @@
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6">
                             <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Date</label><input type="date" id="p_addDate" onchange="saveDraft()" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Street / Route</label><select id="p_addStreet" onchange="updateAutoRep(); saveDraft();" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"></select></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Street / Route</label><select id="p_addStreet" onchange="onAddStreetChange()" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"></select></div>
                             <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Rep Name</label><input type="text" id="p_addRep" oninput="this.value = this.value.toUpperCase(); saveDraft()" placeholder="Rep Name" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none uppercase text-sm"></div>
                             
                             <div class="sm:col-span-2 relative">
                                 <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Outlet / Shop Name</label>
-                                <input type="text" id="p_addOutlet" list="outletAutoList" placeholder="Enter shop name" oninput="this.value = this.value.toUpperCase(); updateAutoRep(); saveDraft()" class="w-full p-2.5 md:p-3 pr-10 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase text-sm">
+                                <input type="text" id="p_addOutlet" list="outletAutoList" placeholder="Enter shop name" oninput="this.value = this.value.toUpperCase(); updateAutoRep(); saveDraft(); updateOutletInfo()" class="w-full p-2.5 md:p-3 pr-10 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase text-sm">
                                 <i class="fas fa-microphone absolute right-4 top-9 text-gray-400 hover:text-theme cursor-pointer transition" onclick="startVoice('p_addOutlet', saveDraft)" title="Voice Type"></i>
                             </div>
                             
                             <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Cases / Qty</label><input type="number" id="p_addCases" oninput="saveDraft()" placeholder="0" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
                             
+                            <div id="outletInfoStrip" class="hidden col-span-full -mt-2 px-3 py-2 rounded-xl border subpanel"></div>
                             <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Bill / Invoice No</label><input type="text" id="p_addBillNo" placeholder="INV-001" oninput="this.value = this.value.toUpperCase(); saveDraft()" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none uppercase font-bold text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Credit Amount (Rs.)</label><input type="number" id="p_addCredit" oninput="saveDraft()" placeholder="0.00" class="w-full p-2.5 md:p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg md:text-xl font-bold text-theme"></div>
                             
@@ -547,7 +572,56 @@
                     </div>
                 </div>
 
+                <div id="page-shopNames" class="page-view hidden fade-in no-print">
+                    <div class="glass p-4 md:p-6 rounded-3xl max-w-6xl mx-auto">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                            <div><h2 class="text-xl font-bold"><i class="fas fa-spell-check text-theme"></i> Shop Names Editor</h2><p class="text-xs text-gray-500" id="snTotal"></p></div>
+                            <div class="flex flex-wrap gap-2 text-xs md:text-sm font-bold">
+                                <button onclick="snDetectDuplicates()" class="bg-orange-100 text-orange-700 px-3 py-2 rounded-xl hover:bg-orange-200"><i class="fas fa-clone"></i> Find Similar Names</button>
+                                <button onclick="snAutoClean()" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-200"><i class="fas fa-broom"></i> Auto-clean</button>
+                                <button onclick="snFindReplace()" class="bg-purple-100 text-purple-700 px-3 py-2 rounded-xl hover:bg-purple-200"><i class="fas fa-exchange-alt"></i> Find & Replace</button>
+                                <button onclick="snMergeSelected()" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-300"><i class="fas fa-compress-arrows-alt"></i> Merge Selected (<span id="snSelCount">0</span>)</button>
+                                <button onclick="snApplyAll()" class="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 shadow"><i class="fas fa-check-double"></i> Apply Changes (<span id="snApplyCount">0</span>)</button>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-slate-700/50 p-3 rounded-xl mb-3 text-xs text-blue-800 dark:text-blue-300 border border-blue-100 dark:border-slate-600"><i class="fas fa-info-circle"></i> <b>උපදෙස්:</b> දකුණු පස ඇති "New Name" කොටුවේ නම් නිවැරදි කරන්න (කිහිපයක් එකවර). හරිගිය නම් කොළ පැහැයෙන් පෙනේ. අවසානයේ <b>Apply Changes</b> ඔබන්න - එම කඩයේ සියලුම බිල්පත් එකවර යාවත්කාලීන වේ. එකම කඩයේ වෙනස් අකුරු සහිත නම් කිහිපයක් ටික් කර <b>Merge Selected</b> මඟින් එකකට ඒකාබද්ධ කළ හැක. වැරදුනොත් Ctrl+Z (Undo).</div>
+                        <div id="snClusters" class="hidden mb-3 p-3 rounded-2xl bg-orange-50 dark:bg-slate-700/40 border border-orange-200 max-h-72 overflow-y-auto"></div>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <input type="text" oninput="snSetQuery(this.value)" placeholder="Search shop name..." class="p-2 border rounded-xl text-sm flex-1 min-w-[160px]">
+                            <select onchange="snSetSort(this.value)" class="p-2 border rounded-xl text-sm"><option value="name">Sort: Name A-Z</option><option value="bills">Sort: Most bills</option><option value="bal">Sort: Highest balance</option></select>
+                            <select onchange="snSetFilter(this.value)" class="p-2 border rounded-xl text-sm"><option value="all">Show: All</option><option value="dirty">Extra spaces / lowercase</option><option value="single">Only 1 bill (likely typos)</option><option value="changed">Edited (unsaved)</option></select>
+                            <button onclick="snResetEdits()" class="bg-gray-200 px-3 py-2 rounded-xl text-sm font-bold"><i class="fas fa-undo"></i> Reset edits</button>
+                        </div>
+                        <div class="max-h-[58vh] overflow-y-auto border rounded-2xl">
+                            <table class="w-full text-left"><thead class="bg-gray-100 dark:bg-slate-900"><tr><th class="p-2 w-10 text-center"><input type="checkbox" class="w-4 h-4" onchange="snSelectAll(this.checked)"></th><th class="p-2 text-xs">Current Name</th><th class="p-2 text-xs text-center">Bills</th><th class="p-2 text-xs text-right">Balance</th><th class="p-2 text-xs hidden md:table-cell">Routes</th><th class="p-2 text-xs w-[38%]">New Name</th></tr></thead><tbody id="snBody" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-insights" class="page-view hidden fade-in no-print">
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbars mb-4 pb-1" id="insTabs"></div>
+                    <div id="insBody"></div>
+                </div>
+
             </main>
+        </div>
+    </div>
+
+    <div id="modal-shop360" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[65] flex items-center justify-center p-3">
+        <div class="panel rounded-3xl shadow-2xl w-full max-w-4xl max-h-[94vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center gap-3"><h3 id="s360Title" class="font-extrabold text-base md:text-lg"></h3><button onclick="closeModal('modal-shop360')" class="w-8 h-8 shrink-0 bg-gray-100 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 transition"><i class="fas fa-times"></i></button></div>
+            <div id="s360Body" class="p-4 overflow-y-auto flex-1 space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="lockScreen" class="hidden fixed inset-0 z-[300] bg-slate-900 flex items-center justify-center p-4">
+        <div class="glass rounded-3xl p-8 w-full max-w-xs text-center text-gray-800">
+            <div class="w-16 h-16 bg-theme rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3"><i class="fas fa-lock"></i></div>
+            <h3 class="font-extrabold text-xl mb-1">App Locked</h3><p class="text-xs text-gray-500 mb-4">PIN අංකය ඇතුළත් කරන්න</p>
+            <input id="lockPinInput" type="password" inputmode="numeric" maxlength="8" onkeydown="if(event.key==='Enter')tryUnlock()" class="w-full p-3 text-center text-2xl tracking-[0.5em] border-2 rounded-xl outline-none text-gray-800 bg-white">
+            <p id="lockMsg" class="text-red-500 text-xs mt-2 h-4"></p>
+            <button onclick="tryUnlock()" class="w-full bg-theme text-white font-bold py-3 rounded-xl mt-2">Unlock</button>
+            <button onclick="lockForgot()" class="text-xs text-gray-400 mt-3 hover:underline">PIN අමතකද?</button>
         </div>
     </div>
 
@@ -672,6 +746,10 @@
                 </div>
                 <input type="number" id="payAmount" onkeydown="if(event.key==='Enter') confirmPayment()" class="w-full p-3 md:p-4 text-2xl md:text-3xl font-extrabold text-gray-800 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-0 outline-none text-center bg-gray-50" placeholder="0.00">
             </div>
+            <div id="paySuggestWrap" class="hidden mb-5 -mt-3">
+                <p class="text-[11px] font-bold text-gray-500 mb-2 text-center"><i class="fas fa-robot text-purple-500"></i> අනුමාන ගෙවීම් (මෙම කඩයේ පෙර ගෙවීම් අනුව) - ක්ලික් කරන්න</p>
+                <div id="paySuggestions" class="grid grid-cols-2 gap-2"></div>
+            </div>
             <button onclick="confirmPayment()" class="w-full bg-green-500 hover:bg-green-600 text-white font-extrabold py-3 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-base md:text-lg"><i class="fas fa-plus"></i> Add to Queue</button>
         </div>
     </div>
@@ -747,7 +825,7 @@
     </div>
 
     <script>
-        const sysVersion = "10.0 Firebase Cloud Sync Edition";
+        const sysVersion = "11.0 Firebase Cloud Sync Edition (Smart Pro)";
 
         // =====================================================================
         // FIREBASE SETUP
@@ -1208,8 +1286,9 @@
         // ANY change made by ANY logged-in device (Admin or Collector) is pushed to every
         // other open browser/tab in real time - this is what makes the system "live".
         function attachRealtimeListeners() {
-            if (listenersAttached) { applySettings(); initUI(); logAction(`Login: ${currentUserEmail} (${role})`); showAIHelper(`Welcome back, ${role}. Type Shift+? for shortcuts.`); return; }
+            if (listenersAttached) { applySettings(); initUI(); logAction(`Login: ${currentUserEmail} (${role})`); showAIHelper(`Welcome back, ${role}. Type Shift+? for shortcuts.`); onAppReady(); return; }
             listenersAttached = true;
+            attachExtrasListener();
             let firstBillsLoad = true, firstExpLoad = true, firstRoutesLoad = true, firstSettingsLoad = true, firstLogsLoad = true;
 
             REF_BILLS().onSnapshot(snap => {
@@ -1251,6 +1330,7 @@
         function boot() {
             applySettings(); initUI(); logAction(`Login: ${currentUserEmail} (${role})`); showAIHelper(`Welcome back, ${role}. Type Shift+? for shortcuts.`);
             flushPendingOfflineSave(); // in case this device had data queued from a previous offline session
+            onAppReady();
         }
 
         // Forces an immediate re-fetch straight from the Firestore SERVER (bypassing any
@@ -1300,7 +1380,9 @@
         window.addEventListener('focus', forceServerRefresh);
         window.addEventListener('online', () => { forceServerRefresh(); flushPendingOfflineSave(); });
 
+        let _enterNavDone = false;
         function setupEnterNavigation() {
+            if (_enterNavDone) return; _enterNavDone = true;
             const billInputs = ['p_addDate', 'p_addStreet', 'p_addRep', 'p_addOutlet', 'p_addCases', 'p_addBillNo', 'p_addCredit', 'p_addRemarks'];
             billInputs.forEach((id, i) => { let el = document.getElementById(id); if(el) el.addEventListener('keydown', (e) => { if(e.key === 'Enter') { e.preventDefault(); if(i < billInputs.length - 1) document.getElementById(billInputs[i+1]).focus(); else addToPendingCart(); } }); });
             const expInputs = ['expDate', 'expDesc', 'expCat', 'expAmount'];
@@ -1349,19 +1431,21 @@
             }
         }
 
-        function initUI() {
+        function initUI(keepState) {
             const dS = document.getElementById('p_addStreet');
             dS.innerHTML = '';
             streets.forEach(s => { dS.innerHTML += `<option value="${s}">${s}</option>`; });
+            // Route selection is remembered: only a fresh login restores the last chosen route; saving bills/payments keeps the current one.
+            if (!keepState) { const saved = getSavedStreet(); activeStreet = (saved === 'All' || streets.includes(saved)) ? saved : 'All'; }
+            else if (activeStreet !== 'All' && !streets.includes(activeStreet)) activeStreet = 'All';
             rebuildStreetTabs();
-            activeStreet = 'All'; 
 
             document.getElementById('p_addDate').valueAsDate = new Date();
             if(document.getElementById('addBillsDateFilter')) document.getElementById('addBillsDateFilter').valueAsDate = new Date();
             if(document.getElementById('collectionsDateFilter')) document.getElementById('collectionsDateFilter').valueAsDate = new Date();
             
-            if(role === 'Collector') { document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); nav('addBills'); } 
-            else { document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden')); nav('dashboard'); }
+            if(role === 'Collector') { document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden')); if(!keepState) nav('addBills'); } 
+            else { document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden')); if(!keepState) nav('dashboard'); }
 
             // Reset System is only ever available to the main admin account, even for other Admins.
             const resetBtn = document.getElementById('btnResetSystem');
@@ -1369,11 +1453,13 @@
             if (resetBtn) resetBtn.classList.toggle('hidden', !isSuperAdmin());
             if (resetDivider) resetDivider.classList.toggle('hidden', !isSuperAdmin());
             
-            updateAutocomplete(); setupEnterNavigation(); loadDraft(); renderDashboard(); renderCheques(); updateAutoRep(); 
+            updateAutocomplete(); setupEnterNavigation(); loadDraft();
+            if (activeStreet !== 'All' && streets.includes(activeStreet)) dS.value = activeStreet;
+            renderDashboard(); renderCheques(); updateAutoRep(); renderTables(); updateOutletInfo();
         }
 
         function setStreet(streetName, btn) { 
-            activeStreet = streetName;
+            activeStreet = streetName; saveActiveStreet();
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-theme-light', 'text-theme')); 
             btn.classList.add('active', 'bg-theme-light', 'text-theme'); 
             
@@ -1402,6 +1488,8 @@
             if(pageId === 'expenses') renderExpenses();
             if(pageId === 'audit') renderAudit();
             if(pageId === 'routesManage') renderRoutesManager(); // New Route manager
+            if(pageId === 'shopNames') renderShopNames();
+            if(pageId === 'insights') renderInsights();
             
             document.getElementById('page-' + pageId).classList.remove('hidden');
         }
@@ -1491,7 +1579,7 @@
         }
         // ----------------------------------------
 
-        function addToPendingCart() {
+        function addToPendingCartCore() {
             const d = document.getElementById('p_addDate').value;
             const s = document.getElementById('p_addStreet').value; const o = document.getElementById('p_addOutlet').value.trim(); const b = document.getElementById('p_addBillNo').value.trim(); const rep = document.getElementById('p_addRep').value.trim(); const cases = document.getElementById('p_addCases').value.trim();
             const rem = document.getElementById('p_addRemarks').value.trim(); const c = parseFloat(document.getElementById('p_addCredit').value);
@@ -1550,7 +1638,7 @@
             if(pendingCart.length === 0) return Swal.fire('Empty', 'No pending bills to save!', 'info');
             const db = getDB(); pendingCart.forEach(bill => { db.push(bill); logAction(`Issued Bill: ${bill.billNo} to ${bill.outlet}`); });
             saveDB(db, `Added ${pendingCart.length} Bills`);
-            const count = pendingCart.length; pendingCart = []; renderPendingCart(); initUI(); 
+            const count = pendingCart.length; pendingCart = []; renderPendingCart(); initUI(true); 
             localStorage.removeItem('geethara_draft'); showAIHelper("Excellent! Bill Saved Successfully"); Swal.fire('Success', `Successfully saved ${count} bills!`, 'success');
         }
 
@@ -1886,6 +1974,7 @@
                     <td class="p-2 md:p-3 text-[10px] md:text-xs text-gray-500 max-w-[160px] whitespace-normal col-remarks">${item.remarks ? hl(item.remarks) : '<span class="text-gray-300 italic">-</span>'}</td>
                     <td class="p-2 md:p-3 text-center no-print col-audit">${audHTML}</td>
                     <td class="p-2 md:p-3 text-center flex gap-1 justify-center no-print col-actions">
+                        <button data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)" class="w-6 h-6 md:w-7 md:h-7 rounded bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white transition text-xs" title="Shop Profile / Limit / Promises"><i class="fas fa-store"></i></button>
                         <button onclick="shareViaWhatsApp('${item.outlet.replace(/'/g, "\\'")}', '${actualBal}', '${item.billNo}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition text-xs" title="WhatsApp Reminder"><i class="fab fa-whatsapp"></i></button>
                         <button onclick="viewInvoice('${item.id}')" class="w-6 h-6 md:w-7 md:h-7 rounded bg-blue-50 text-theme hover:bg-theme hover:text-white transition text-xs"><i class="fas fa-eye"></i></button>
                         <button onclick="openEditModal('${item.id}')" class="admin-only w-6 h-6 md:w-7 md:h-7 rounded bg-yellow-50 text-yellow-600 hover:bg-yellow-600 hover:text-white transition text-xs"><i class="fas fa-pen"></i></button>
@@ -1895,7 +1984,7 @@
                     pendingCount++;
                     cHtmlStr += `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                         <td class="p-2 md:p-4 text-[10px] md:text-sm text-gray-500">${item.date}</td><td class="p-2 md:p-4 font-bold text-xs md:text-sm">${item.billNo||'-'}</td>
-                        <td class="p-2 md:p-4 font-semibold text-theme text-xs md:text-sm">${item.outlet} <br><span class="text-[9px] text-gray-400">${item.street}</span></td><td class="p-2 md:p-4 text-right font-extrabold text-red-500 text-sm md:text-lg">Rs. ${fmt(visualBal)}</td>
+                        <td class="p-2 md:p-4 font-semibold text-theme text-xs md:text-sm"><span class="cursor-pointer hover:underline" data-n="${escH(item.outlet)}" onclick="openShop360(this.dataset.n)">${item.outlet} <i class="fas fa-store text-[10px] opacity-60"></i></span> <br><span class="text-[9px] text-gray-400">${item.street}</span></td><td class="p-2 md:p-4 text-right font-extrabold text-red-500 text-sm md:text-lg">Rs. ${fmt(visualBal)}</td>
                         <td class="p-2 md:p-4 text-center no-print"><button onclick="openPay('${item.id}', '${item.outlet.replace(/'/g, "\\'")}', ${visualBal})" class="bg-green-100 text-green-700 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-green-600 hover:text-white transition shadow-sm"><i class="fas fa-plus"></i> Queue</button></td>
                     </tr>`;
                 }
@@ -2181,7 +2270,7 @@
 
         function openPay(id, outlet, bal) { 
             document.getElementById('payId').value = id;
-            document.getElementById('payOutlet').innerText = outlet; document.getElementById('payArrears').innerText = fmt(bal); document.getElementById('payFullBal').value = bal || 0; document.getElementById('payAmount').value = ''; 
+            document.getElementById('payOutlet').innerText = outlet; document.getElementById('payArrears').innerText = fmt(bal); document.getElementById('payFullBal').value = bal || 0; document.getElementById('payAmount').value = ''; renderPaySuggestions(id, outlet, bal); 
             document.getElementById('payDate').value = sdLockedPay ? sdLockedPay : new Date().toISOString().split('T')[0];
             
             document.querySelector('input[value="Cash"]').checked = true;
@@ -2261,7 +2350,7 @@
                     let t = totalCash + totalCheque;
                     if(t >= 100000) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } }); 
                     const count = pendingColCart.length;
-                    pendingColCart = []; renderColCart(); renderCheques(); initUI(); Swal.fire('Success', `${count} Payments saved!`, 'success');
+                    pendingColCart = []; renderColCart(); renderCheques(); initUI(true); Swal.fire('Success', `${count} Payments saved!`, 'success');
                 }
             });
         }
@@ -2512,17 +2601,15 @@
             reader.readAsText(file);
         }
 
-        function showShortcuts() { Swal.fire({ title: '⌨️ Keyboard Shortcuts', html: `<div class="text-left space-y-2 text-sm"><p><kbd class="bg-gray-200 px-2 py-1 rounded">Ctrl</kbd> + <kbd class="bg-gray-200 px-2 py-1 rounded">S</kbd> : Save Pending Bills/Payments</p><p><kbd class="bg-gray-200 px-2 py-1 rounded">Ctrl</kbd> + <kbd class="bg-gray-200 px-2 py-1 rounded">F</kbd> : Focus Smart Search</p><p><kbd class="bg-gray-200 px-2 py-1 rounded">Ctrl</kbd> + <kbd class="bg-gray-200 px-2 py-1 rounded">Z</kbd> : Undo Last Action</p><p><kbd class="bg-gray-200 px-2 py-1 rounded">Ctrl</kbd> + <kbd class="bg-gray-200 px-2 py-1 rounded">Y</kbd> : Redo Last Action</p><p><kbd class="bg-gray-200 px-2 py-1 rounded">Shift</kbd> + <kbd class="bg-gray-200 px-2 py-1 rounded">?</kbd> : Show this menu</p></div>`, confirmButtonColor: '#3b82f6' }); }
 
-        function startVoice(id, cb) { Toast.fire({icon: 'info', title: 'Voice command not fully supported yet.'}); }
         function triggerExcel() { document.getElementById('excelUpload').click(); }
         function exportToPDF() { const element = document.getElementById('pdfArea');
             Toast.fire({icon: 'info', title: 'Generating PDF...'});
             const opt = { margin: 0.2, filename: 'Report.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight }, jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } };
             html2pdf().set(opt).from(element).save();
         }
-        function backupDB() { const data = JSON.stringify({ db: getDB(), exp: getExp() });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = `Backup.json`; a.click(); logAction("System Backup Downloaded");
+        function backupDB() { const data = JSON.stringify({ db: getDB(), exp: getExp(), extras: extrasCache });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = `Geethara_Backup_${localToday()}.json`; a.click(); try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch(e) {} refreshAlertBadge(); logAction("System Backup Downloaded");
         }
         
         function processExcel(e) {
@@ -2588,6 +2675,881 @@
             }; 
             reader.readAsArrayBuffer(file);
         }
+        // =====================================================================
+        // ★★★ v11 ENHANCEMENTS (added) ★★★
+        // Core helpers, extras store (shop profiles / promises / settings), shop index
+        // =====================================================================
+        const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const normName = s => String(s == null ? '' : s).toUpperCase().replace(/\s+/g, ' ').trim();
+        const num = v => Number(v) || 0;
+        const pad2 = n => String(n).padStart(2, '0');
+        const dateToStr = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        const localToday = () => dateToStr(new Date());
+        const parseD = s => { if (!s) return null; const p = String(s).split('-'); if (p.length < 3) return null; const d = new Date(+p[0], +p[1] - 1, +p[2]); return isNaN(d) ? null : d; };
+        const daysBetween = (a, b) => { const x = parseD(a), y = parseD(b); if (!x || !y) return 0; return Math.round((y - x) / 86400000); };
+        const addDaysStr = (s, n) => { const d = parseD(s) || new Date(); d.setDate(d.getDate() + n); return dateToStr(d); };
+        const isPageVisible = id => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); };
+        const isChequeIns = ins => ins && (ins.type === 'Cheque' || (ins.by && String(ins.by).includes('Cheque')));
+        const AGING_KEYS = ['0-7', '8-14', '15-30', '31-60', '61-90', '90+'];
+        const agingBucket = d => d <= 7 ? '0-7' : d <= 14 ? '8-14' : d <= 30 ? '15-30' : d <= 60 ? '31-60' : d <= 90 ? '61-90' : '90+';
+        const roundNice = v => { v = Math.abs(v); if (v >= 10000) return Math.round(v / 1000) * 1000; if (v >= 2000) return Math.round(v / 500) * 500; if (v >= 500) return Math.round(v / 100) * 100; if (v >= 100) return Math.round(v / 50) * 50; return Math.round(v); };
+
+        // ---------- Extras store: shop profiles, promises, settings (synced via Firestore doc geethara/extras, mirrored in localStorage) ----------
+        const REF_EXTRAS = () => firestoreDB.collection('geethara').doc('extras');
+        const EXTRAS_LS_KEY = 'geethara_extras_v1';
+        let extrasCache = { shops: {}, promises: {}, settings: {} };
+        try { const _raw = localStorage.getItem(EXTRAS_LS_KEY); if (_raw) { const o = JSON.parse(_raw); extrasCache = { shops: o.shops || {}, promises: o.promises || {}, settings: o.settings || {} }; } } catch (e) {}
+        function persistExtrasLocal() { try { localStorage.setItem(EXTRAS_LS_KEY, JSON.stringify(extrasCache)); } catch (e) {} }
+        const shopKey = name => normName(name).replace(/[.\/\[\]*~`]/g, '_');
+        function extrasWrite(partial) { try { REF_EXTRAS().set(partial, { merge: true }).catch(e => console.warn('Extras sync failed (kept locally):', e && e.message)); } catch (e) {} }
+        const getShopExtra = name => extrasCache.shops[shopKey(name)] || {};
+        function setShopExtra(name, obj) { const k = shopKey(name); extrasCache.shops[k] = Object.assign({}, extrasCache.shops[k] || {}, obj); persistExtrasLocal(); extrasWrite({ shops: { [k]: extrasCache.shops[k] } }); }
+        function deleteShopExtra(name) { const k = shopKey(name); delete extrasCache.shops[k]; persistExtrasLocal(); extrasWrite({ shops: { [k]: firebase.firestore.FieldValue.delete() } }); }
+        function setExtraSetting(key, val) { extrasCache.settings[key] = val; persistExtrasLocal(); extrasWrite({ settings: { [key]: val } }); }
+        function setPromise(p) { extrasCache.promises[p.id] = p; persistExtrasLocal(); extrasWrite({ promises: { [p.id]: p } }); }
+        function deletePromiseRec(id) { delete extrasCache.promises[id]; persistExtrasLocal(); extrasWrite({ promises: { [id]: firebase.firestore.FieldValue.delete() } }); }
+        let extrasListenerOn = false;
+        function attachExtrasListener() {
+            if (extrasListenerOn) return; extrasListenerOn = true;
+            try {
+                REF_EXTRAS().onSnapshot(snap => {
+                    if (snap.exists) { const d = snap.data() || {}; extrasCache = { shops: d.shops || {}, promises: d.promises || {}, settings: d.settings || {} }; persistExtrasLocal(); }
+                    refreshAfterExtras();
+                }, e => console.warn('Extras listener:', e && e.message));
+            } catch (e) {}
+        }
+        function refreshAfterExtras() {
+            try { refreshAlertBadge(); if (isPageVisible('page-dashboard')) renderDashboardExtras(); if (isPageVisible('page-insights')) renderInsights(); if (isPageVisible('modal-shop360')) renderShop360(); } catch (e) { console.warn(e); }
+        }
+        const getDailyTarget = () => num(extrasCache.settings.dailyTarget);
+
+        // ---------- Shop index (one pass over all bills, cached until data changes) ----------
+        let _shopIdx = { src: null, map: new Map(), exact: new Map() };
+        function getShopIndex() {
+            if (_shopIdx.src === dbCache) return _shopIdx;
+            const today = localToday(); const map = new Map(); const exact = new Map();
+            (dbCache || []).forEach(b => {
+                const k = normName(b.outlet);
+                exact.set(b.outlet, (exact.get(b.outlet) || 0) + 1);
+                let s = map.get(k);
+                if (!s) { s = { key: k, name: k, bills: [], credit: 0, collected: 0, balance: 0, streets: {}, returned: 0, payDaysSum: 0, payCnt: 0, lastPay: null, lastBillDate: '', oldestDue: 0, aging: {}, openBills: 0 }; AGING_KEYS.forEach(a => s.aging[a] = 0); map.set(k, s); }
+                s.bills.push(b); s.credit += num(b.credit); s.collected += num(b.collected);
+                s.streets[b.street] = (s.streets[b.street] || 0) + 1;
+                if (b.date && b.date > s.lastBillDate) s.lastBillDate = b.date;
+                const bal = num(b.credit) - num(b.collected);
+                if (bal > 0.009) { const age = Math.max(0, daysBetween(b.date, today)); s.aging[agingBucket(age)] += bal; if (age > s.oldestDue) s.oldestDue = age; s.openBills++; }
+                (b.installments || []).forEach(ins => {
+                    if (ins.returned) { s.returned++; return; }
+                    const dd = daysBetween(b.date, ins.date); if (dd >= 0 && b.date && ins.date) { s.payDaysSum += dd; s.payCnt++; }
+                    if (!s.lastPay || ins.date > s.lastPay.date) s.lastPay = { date: ins.date, amt: num(ins.amt) };
+                });
+            });
+            map.forEach(s => {
+                s.balance = s.credit - s.collected; s.avgPayDays = s.payCnt ? Math.round(s.payDaysSum / s.payCnt) : 0;
+                s.mainStreet = Object.keys(s.streets).sort((a, b) => s.streets[b] - s.streets[a])[0] || '';
+                s.risk = riskScore(s);
+            });
+            _shopIdx = { src: dbCache, map, exact }; return _shopIdx;
+        }
+        function riskScore(s) {
+            if (s.balance <= 0.009) return { score: 0, grade: 'A', label: 'Low' };
+            let sc = s.aging['90+'] > 0 ? 40 : s.aging['61-90'] > 0 ? 30 : s.aging['31-60'] > 0 ? 20 : s.aging['15-30'] > 0 ? 10 : 0;
+            if (s.avgPayDays > 60) sc += 20; else if (s.avgPayDays > 30) sc += 10;
+            sc += Math.min(30, s.returned * 15);
+            const lim = num(getShopExtra(s.key).limit); if (lim > 0 && s.balance > lim) sc += 15;
+            const grade = sc < 20 ? 'A' : sc < 40 ? 'B' : sc < 65 ? 'C' : 'D';
+            return { score: sc, grade, label: { A: 'Low', B: 'Medium', C: 'High', D: 'Very High' }[grade] };
+        }
+        const riskBadge = r => { const c = { A: 'bg-green-100 text-green-700', B: 'bg-yellow-100 text-yellow-700', C: 'bg-orange-100 text-orange-700', D: 'bg-red-100 text-red-700' }[r.grade]; return `<span class="${c} px-2 py-0.5 rounded font-extrabold text-[10px]" title="Risk score ${r.score}">RISK ${r.grade}</span>`; };
+        const shopStat = name => getShopIndex().map.get(normName(name)) || null;
+        const pendingForShop = key => pendingCart.filter(p => normName(p.outlet) === key).reduce((s, p) => s + num(p.credit), 0);
+
+        // ---------- Similar-name detection (typo guard + duplicate finder) ----------
+        const simKey = s => String(s || '').toUpperCase().replace(/[^A-Z0-9\u0D80-\u0DFF]/g, '');
+        function levWithin(a, b, max) {
+            if (a === b) return 0; const la = a.length, lb = b.length; if (Math.abs(la - lb) > max) return max + 1;
+            let prev = new Array(lb + 1); for (let j = 0; j <= lb; j++) prev[j] = j;
+            for (let i = 1; i <= la; i++) {
+                const cur = [i]; let rowMin = i;
+                for (let j = 1; j <= lb; j++) { const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); cur[j] = v; if (v < rowMin) rowMin = v; }
+                if (rowMin > max) return max + 1; prev = cur;
+            }
+            return prev[lb];
+        }
+        function namesSimilar(a, b) {
+            const x = simKey(a), y = simKey(b); if (!x || !y) return false; if (x === y) return true;
+            const mn = Math.min(x.length, y.length); if (mn < 3) return false;
+            const lim = Math.max(x.length, y.length) <= 5 ? 1 : 2;
+            return levWithin(x, y, lim) <= lim;
+        }
+        // returns {exact:boolean, matches:[{name,bills}]}
+        function findSimilarShops(typed) {
+            const t = normName(typed); const idx = getShopIndex(); if (!t) return { exact: false, matches: [] };
+            if (idx.map.has(t)) return { exact: true, matches: [] };
+            const out = [];
+            idx.map.forEach(s => { if (namesSimilar(t, s.name)) out.push({ name: s.name, bills: s.bills.length, bal: s.balance }); });
+            out.sort((a, b) => b.bills - a.bills); return { exact: false, matches: out.slice(0, 3) };
+        }
+
+        // =====================================================================
+        // (1) ROUTE PERSISTENCE - the selected street stays selected until another is chosen
+        // =====================================================================
+        const ACTIVE_STREET_KEY = 'geethara_active_street';
+        function getSavedStreet() { try { return localStorage.getItem(ACTIVE_STREET_KEY) || 'All'; } catch (e) { return 'All'; } }
+        function saveActiveStreet() { try { localStorage.setItem(ACTIVE_STREET_KEY, activeStreet); } catch (e) {} }
+        // Called when the Street dropdown on "Add Bills" is changed: keeps the top route tabs in sync.
+        function onAddStreetChange() {
+            const v = document.getElementById('p_addStreet').value;
+            if (v && v !== activeStreet) {
+                activeStreet = v; saveActiveStreet(); rebuildStreetTabs();
+                renderTables(); renderCheques();
+                if (document.getElementById('addBillsDateFilter')) renderAddBillsHistory();
+                if (document.getElementById('collectionsDateFilter')) renderCollectionsHistory();
+            }
+            updateAutoRep(); saveDraft(); updateOutletInfo();
+        }
+
+        // =====================================================================
+        // (2) SMART PAYMENT AMOUNT SUGGESTIONS (4 guesses from the shop's payment history)
+        // =====================================================================
+        const PAY_TAG_LABEL = { FULL: 'සම්පූර්ණ ශේෂය', USUAL: 'සුපුරුදු ගෙවීම', PAST: 'පෙර ගෙවූ', LAST: 'අවසන් ගෙවීම', AVG: 'සාමාන්‍යය', RATIO: 'සුපුරුදු %', HALF: 'භාගය', QTR: '¼ ක්', TQ: '¾ ක්' };
+        function computePaymentSuggestions(billId, outlet, bal) {
+            bal = num(bal); if (bal <= 0) return [];
+            const key = normName(outlet); const shop = getShopIndex().map.get(key);
+            const thisBill = (dbCache || []).find(b => b.id === billId);
+            const hist = [];
+            if (shop) shop.bills.forEach(b => {
+                let run = 0; const credit = num(b.credit);
+                (b.installments || []).forEach(ins => {
+                    const a = num(ins.amt); const before = credit - run; run += a;
+                    if (ins.returned || a <= 0) return;
+                    hist.push({ amt: Math.round(a * 100) / 100, date: ins.date || '', full: a >= before - 0.5, ratio: credit > 0 ? a / credit : 0 });
+                });
+            });
+            hist.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
+            const n = hist.length; const cand = new Map();
+            const add = (v, score, tag) => {
+                v = Math.round(v * 100) / 100; if (!(v > 0)) return; if (v > bal + 0.009) return;
+                const c = cand.get(v) || { amt: v, score: 0, tag, best: 0 }; c.score += score; if (score > c.best) { c.best = score; c.tag = tag; } cand.set(v, c);
+            };
+            const fullRatio = n ? hist.filter(h => h.full).length / n : 0;
+            add(bal, n ? 1.5 + 4 * fullRatio : 2.5, 'FULL');
+            // frequency of exact amounts (recent payments weigh more)
+            const freq = {};
+            hist.forEach((h, i) => { const w = 1 + (n > 1 ? i / (n - 1) : 0); freq[h.amt] = freq[h.amt] || { w: 0, c: 0 }; freq[h.amt].w += w; freq[h.amt].c++; });
+            Object.keys(freq).forEach(k => add(parseFloat(k), freq[k].w * 1.2, freq[k].c >= 2 ? 'USUAL' : 'PAST'));
+            if (n) add(hist[n - 1].amt, 2, 'LAST');
+            if (n >= 2) { const mean = hist.reduce((s, h) => s + h.amt, 0) / n; add(roundNice(mean), 1.5, 'AVG'); }
+            const part = hist.filter(h => !h.full && h.ratio > 0);
+            if (part.length) { const r = part.reduce((s, h) => s + h.ratio, 0) / part.length; const base = thisBill ? num(thisBill.credit) : bal; add(roundNice(r * base), 1.2, 'RATIO'); }
+            // fillers so there are always 4 choices
+            add(roundNice(bal * 0.5) || bal, 0.4, 'HALF'); add(roundNice(bal * 0.25) || bal, 0.3, 'QTR'); add(roundNice(bal * 0.75) || bal, 0.3, 'TQ');
+            [1000, 5000, 500, 2000, 10000].forEach(v => add(v, 0.1, 'PAST'));
+            return [...cand.values()].sort((a, b) => b.score - a.score || b.amt - a.amt).slice(0, 4);
+        }
+        function renderPaySuggestions(billId, outlet, bal) {
+            const wrap = document.getElementById('paySuggestWrap'); const box = document.getElementById('paySuggestions'); if (!wrap || !box) return;
+            const sug = computePaymentSuggestions(billId, outlet, bal);
+            if (!sug.length) { wrap.classList.add('hidden'); box.innerHTML = ''; return; }
+            wrap.classList.remove('hidden');
+            box.innerHTML = sug.map(s => `<button type="button" onclick="applyPaySuggestion(${s.amt})" class="pay-chip"><span class="pay-chip-amt">Rs. ${fmt(s.amt)}</span><span class="pay-chip-tag">${PAY_TAG_LABEL[s.tag] || ''}</span></button>`).join('');
+        }
+        function applyPaySuggestion(v) {
+            const inp = document.getElementById('payAmount'); inp.value = v; inp.focus(); inp.select();
+            inp.classList.add('ring-4', 'ring-green-200'); setTimeout(() => inp.classList.remove('ring-4', 'ring-green-200'), 500);
+        }
+
+        // =====================================================================
+        // (3) BULK SHOP-NAME EDITOR (fix typos made by different employees in one go)
+        // =====================================================================
+        let snState = { edits: {}, selected: new Set(), q: '', sort: 'name', filter: 'all', rows: [], clusters: null };
+        function snCollect() {
+            const m = new Map();
+            (dbCache || []).forEach(b => {
+                const nm = b.outlet == null ? '' : String(b.outlet); let r = m.get(nm);
+                if (!r) { r = { name: nm, bills: 0, bal: 0, streets: new Set() }; m.set(nm, r); }
+                r.bills++; r.bal += num(b.credit) - num(b.collected); if (b.street) r.streets.add(b.street);
+            });
+            return [...m.values()];
+        }
+        const snClean = s => normName(s);
+        function renderShopNames() {
+            const body = document.getElementById('snBody'); if (!body) return;
+            let rows = snCollect(); const q = snState.q.trim().toUpperCase();
+            if (q) rows = rows.filter(r => r.name.toUpperCase().includes(q));
+            if (snState.filter === 'dirty') rows = rows.filter(r => snClean(r.name) !== r.name);
+            if (snState.filter === 'changed') rows = rows.filter(r => snState.edits[r.name] != null && snState.edits[r.name] !== r.name);
+            if (snState.filter === 'single') rows = rows.filter(r => r.bills === 1);
+            const srt = snState.sort;
+            rows.sort((a, b) => srt === 'bills' ? b.bills - a.bills : srt === 'bal' ? b.bal - a.bal : a.name.localeCompare(b.name));
+            snState.rows = rows;
+            if (!rows.length) { body.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 italic">No shop names match.</td></tr>`; snUpdateCounters(); return; }
+            body.innerHTML = rows.map((r, i) => {
+                const cur = snState.edits[r.name] != null ? snState.edits[r.name] : r.name; const changed = cur !== r.name;
+                const dirty = snClean(r.name) !== r.name;
+                return `<tr id="sn_row_${i}" class="${changed ? 'sn-changed' : ''} hover:bg-gray-50 dark:hover:bg-slate-800">
+                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4" ${snState.selected.has(r.name) ? 'checked' : ''} onchange="snToggle(${i}, this.checked)"></td>
+                    <td class="p-2 text-xs md:text-sm"><span class="font-semibold cursor-pointer hover:underline text-theme" onclick="openShop360(snState.rows[${i}].name)">${escH(r.name) || '<i>(blank)</i>'}</span>${dirty ? ' <span class="text-[9px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold">SPACES/CASE</span>' : ''}</td>
+                    <td class="p-2 text-center text-xs font-bold">${r.bills}</td>
+                    <td class="p-2 text-right text-xs font-bold text-red-500">${fmt(r.bal)}</td>
+                    <td class="p-2 text-[10px] text-gray-500 hidden md:table-cell">${escH([...r.streets].join(', '))}</td>
+                    <td class="p-2"><input type="text" value="${escH(cur)}" oninput="snEdit(${i}, this.value)" class="sn-input w-full p-1.5 border rounded-lg text-xs md:text-sm font-bold uppercase" list="outletAutoList"></td></tr>`;
+            }).join('');
+            snUpdateCounters();
+        }
+        function snEdit(i, val) {
+            const r = snState.rows[i]; if (!r) return; const v = val.toUpperCase();
+            if (v === r.name) delete snState.edits[r.name]; else snState.edits[r.name] = v;
+            const tr = document.getElementById('sn_row_' + i); if (tr) tr.classList.toggle('sn-changed', v !== r.name);
+            snUpdateCounters();
+        }
+        function snToggle(i, checked) { const r = snState.rows[i]; if (!r) return; if (checked) snState.selected.add(r.name); else snState.selected.delete(r.name); snUpdateCounters(); }
+        function snSelectAll(checked) { snState.rows.forEach(r => { if (checked) snState.selected.add(r.name); else snState.selected.delete(r.name); }); renderShopNames(); }
+        function snChangedList() { return Object.keys(snState.edits).filter(k => { const v = snClean(snState.edits[k]); return v && v !== k; }); }
+        function snUpdateCounters() {
+            const c = snChangedList().length; const el = document.getElementById('snApplyCount'); if (el) el.innerText = c;
+            const sel = document.getElementById('snSelCount'); if (sel) sel.innerText = snState.selected.size;
+            const tot = document.getElementById('snTotal'); if (tot) tot.innerText = getShopIndex().map.size + ' shops / ' + snCollect().length + ' name variants';
+        }
+        function snSetQuery(v) { snState.q = v; renderShopNames(); }
+        function snSetSort(v) { snState.sort = v; renderShopNames(); }
+        function snSetFilter(v) { snState.filter = v; renderShopNames(); }
+        function snResetEdits() { snState.edits = {}; snState.selected.clear(); renderShopNames(); }
+        // Normalise: trim, collapse spaces, UPPERCASE - only for names that need it
+        function snAutoClean() {
+            let c = 0; snCollect().forEach(r => { const v = snClean(r.name); if (v !== r.name && v) { snState.edits[r.name] = v; c++; } });
+            renderShopNames(); Toast.fire({ icon: c ? 'success' : 'info', title: c ? `${c} names prepared - press "Apply Changes"` : 'All names are already clean' });
+        }
+        function snFindReplace() {
+            Swal.fire({
+                title: 'Find & Replace in Shop Names',
+                html: `<input id="sn_find" class="swal2-input" placeholder="Find (e.g. HOTL)" style="width:80%"><input id="sn_repl" class="swal2-input" placeholder="Replace with (e.g. HOTEL)" style="width:80%"><label class="text-xs flex items-center justify-center gap-2 mt-2"><input type="checkbox" id="sn_word"> Whole words only</label>`,
+                showCancelButton: true, confirmButtonText: 'Preview', preConfirm: () => { const f = document.getElementById('sn_find').value.trim(); if (!f) { Swal.showValidationMessage('Enter text to find'); return false; } return { f: f.toUpperCase(), r: document.getElementById('sn_repl').value.toUpperCase(), w: document.getElementById('sn_word').checked }; }
+            }).then(res => {
+                if (!res.isConfirmed) return; const { f, r, w } = res.value; let c = 0;
+                const esc2 = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); const re = new RegExp(w ? `\\b${esc2}\\b` : esc2, 'g');
+                snCollect().forEach(row => { const cur = snState.edits[row.name] != null ? snState.edits[row.name] : row.name; const nv = cur.toUpperCase().replace(re, r); if (nv !== cur) { snState.edits[row.name] = snClean(nv); c++; } });
+                renderShopNames(); Toast.fire({ icon: c ? 'success' : 'info', title: c ? `${c} names updated in the list - review then press "Apply Changes"` : 'No matches found' });
+            });
+        }
+        function snRenameInDB(map) { // map: oldExactName -> newName ; returns {names, bills}
+            const db = getDB(); let bills = 0;
+            db.forEach(b => { if (map.has(b.outlet)) { b.outlet = map.get(b.outlet); bills++; } });
+            return { db, bills };
+        }
+        function migrateShopExtras(map) {
+            try {
+                map.forEach((nw, old) => {
+                    const ok = shopKey(old), nk = shopKey(nw);
+                    if (ok !== nk && extrasCache.shops[ok]) { const merged = Object.assign({}, extrasCache.shops[ok], extrasCache.shops[nk] || {}); extrasCache.shops[nk] = merged; delete extrasCache.shops[ok]; extrasWrite({ shops: { [nk]: merged, [ok]: firebase.firestore.FieldValue.delete() } }); }
+                    Object.values(extrasCache.promises).forEach(p => { if (normName(p.outlet) === normName(old)) { p.outlet = normName(nw); setPromise(p); } });
+                });
+                persistExtrasLocal();
+            } catch (e) { console.warn(e); }
+        }
+        function snApplyAll() {
+            const list = snChangedList(); if (!list.length) return Swal.fire('Nothing to apply', 'Edit one or more names first.', 'info');
+            const map = new Map(); list.forEach(o => map.set(o, snClean(snState.edits[o])));
+            let affected = 0; (dbCache || []).forEach(b => { if (map.has(b.outlet)) affected++; });
+            const preview = list.slice(0, 12).map(o => `<div class="text-xs text-left"><span class="text-red-500 line-through">${escH(o)}</span> → <b class="text-green-600">${escH(map.get(o))}</b></div>`).join('') + (list.length > 12 ? `<div class="text-xs text-gray-400 mt-1">...and ${list.length - 12} more</div>` : '');
+            Swal.fire({ title: `${list.length} shop name(s) / ${affected} bills`, html: preview, icon: 'question', showCancelButton: true, confirmButtonText: 'Apply to all bills', confirmButtonColor: '#10b981' }).then(r => {
+                if (!r.isConfirmed) return; const out = snRenameInDB(map);
+                saveDB(out.db, `Bulk Shop Rename: ${list.length} name(s), ${out.bills} bill(s)`); migrateShopExtras(map);
+                snState.edits = {}; snState.selected.clear(); updateAutocomplete();
+                setTimeout(() => { renderShopNames(); renderTables(); renderCheques(); renderDashboard(); }, 150);
+                Toast.fire({ icon: 'success', title: `${out.bills} bills updated` });
+            });
+        }
+        function snMergeSelected() {
+            const names = [...snState.selected]; if (names.length < 2) return Swal.fire('Select 2+ names', 'Tick the names that are the same shop, then merge.', 'info');
+            const counts = {}; (dbCache || []).forEach(b => { if (snState.selected.has(b.outlet)) counts[b.outlet] = (counts[b.outlet] || 0) + 1; });
+            const def = snClean(names.sort((a, b) => (counts[b] || 0) - (counts[a] || 0))[0]);
+            Swal.fire({ title: `Merge ${names.length} names into one`, input: 'text', inputValue: def, inputLabel: 'Correct shop name', showCancelButton: true, confirmButtonText: 'Merge', inputValidator: v => !snClean(v) ? 'Enter a name' : undefined }).then(r => {
+                if (!r.isConfirmed) return; const target = snClean(r.value); const map = new Map(); names.forEach(n => { if (n !== target) map.set(n, target); });
+                if (!map.size) return; const out = snRenameInDB(map);
+                saveDB(out.db, `Merged ${names.length} shop names into "${target}" (${out.bills} bills)`); migrateShopExtras(map);
+                snState.selected.clear(); snState.edits = {}; snState.clusters = null; updateAutocomplete();
+                setTimeout(() => { renderShopNames(); renderTables(); renderDashboard(); }, 150); Toast.fire({ icon: 'success', title: `Merged - ${out.bills} bills updated` });
+            });
+        }
+        // Auto-detect names that look like the same shop (typos / spelling variants)
+        function snDetectDuplicates() {
+            Swal.fire({ title: 'Scanning names...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            setTimeout(() => {
+                const idx = getShopIndex(); const names = [...idx.map.values()].map(s => ({ n: s.name, c: s.bills.length })); names.sort((a, b) => a.n.length - b.n.length);
+                const parent = names.map((_, i) => i); const find = i => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+                for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) { if (names[j].n.length - names[i].n.length > 3) break; if (namesSimilar(names[i].n, names[j].n)) parent[find(j)] = find(i); }
+                const groups = {}; names.forEach((o, i) => { const r = find(i); (groups[r] = groups[r] || []).push(o); });
+                snState.clusters = Object.values(groups).filter(g => g.length > 1).map(g => g.sort((a, b) => b.c - a.c));
+                Swal.close(); renderSnClusters();
+                if (!snState.clusters.length) Toast.fire({ icon: 'success', title: 'No similar shop names found' });
+            }, 50);
+        }
+        function renderSnClusters() {
+            const box = document.getElementById('snClusters'); if (!box) return;
+            if (!snState.clusters || !snState.clusters.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            box.classList.remove('hidden');
+            box.innerHTML = `<div class="flex justify-between items-center mb-2"><b class="text-sm text-orange-700"><i class="fas fa-clone"></i> ${snState.clusters.length} groups of similar names found</b><button onclick="snState.clusters=null;renderSnClusters()" class="text-xs text-gray-500 hover:text-red-500"><i class="fas fa-times"></i> close</button></div>` +
+                snState.clusters.slice(0, 60).map((g, gi) => `<div class="bg-white dark:bg-slate-800 border rounded-xl p-2 mb-2 flex flex-wrap items-center gap-2 text-xs">${g.map(o => `<span class="px-2 py-1 rounded bg-gray-100 dark:bg-slate-700 font-semibold">${escH(o.n)} <span class="text-gray-400">(${o.c})</span></span>`).join('')}<button onclick="snMergeCluster(${gi})" class="ml-auto bg-theme text-white px-3 py-1 rounded-lg font-bold"><i class="fas fa-compress-arrows-alt"></i> Merge → ${escH(g[0].n)}</button></div>`).join('') + (snState.clusters.length > 60 ? '<p class="text-xs text-gray-400">Showing first 60 groups</p>' : '');
+        }
+        function snMergeCluster(gi) {
+            const g = snState.clusters[gi]; if (!g) return;
+            Swal.fire({ title: 'Merge into which name?', input: 'select', inputOptions: Object.fromEntries(g.map(o => [o.n, `${o.n} (${o.c} bills)`])), inputValue: g[0].n, showCancelButton: true, confirmButtonText: 'Merge' }).then(r => {
+                if (!r.isConfirmed) return; const target = r.value; const map = new Map();
+                (dbCache || []).forEach(b => { if (g.some(o => o.n === normName(b.outlet)) && b.outlet !== target) map.set(b.outlet, target); });
+                if (!map.size) return; const out = snRenameInDB(map);
+                saveDB(out.db, `Merged similar shop names into "${target}" (${out.bills} bills)`); migrateShopExtras(map);
+                snState.clusters.splice(gi, 1); updateAutocomplete();
+                setTimeout(() => { renderSnClusters(); renderShopNames(); renderTables(); renderDashboard(); }, 150); Toast.fire({ icon: 'success', title: `Merged - ${out.bills} bills updated` });
+            });
+        }
+
+        // =====================================================================
+        // ADD-BILL GUARDS: live shop info strip, typo guard, duplicate bill no, credit limit, watch-list
+        // =====================================================================
+        const acceptedNewNames = new Set();
+        function updateOutletInfo() {
+            const strip = document.getElementById('outletInfoStrip'); const inp = document.getElementById('p_addOutlet'); if (!strip || !inp) return;
+            const t = normName(inp.value); if (!t) { strip.classList.add('hidden'); strip.innerHTML = ''; return; }
+            const s = shopStat(t); strip.classList.remove('hidden');
+            if (s) {
+                const ex = getShopExtra(t); const lim = num(ex.limit); const pend = pendingForShop(s.key);
+                const used = lim > 0 ? Math.round(((s.balance + pend) / lim) * 100) : null;
+                strip.innerHTML = `<div class="flex flex-wrap gap-x-4 gap-y-1 items-center text-[11px] md:text-xs">
+                    <span class="font-bold text-red-500">Outstanding: Rs. ${fmt(s.balance + pend)}</span>
+                    ${lim > 0 ? `<span class="font-bold ${used > 100 ? 'text-red-600' : 'text-gray-600'}">Limit: Rs. ${fmt(lim)} (${used}%)</span>` : ''}
+                    <span class="text-gray-500">Last bill: ${escH(s.lastBillDate || '-')}</span>
+                    <span class="text-gray-500">Avg pay: ${s.avgPayDays ? s.avgPayDays + ' days' : '-'}</span>
+                    ${riskBadge(s.risk)} ${ex.watch ? '<span class="bg-red-600 text-white px-2 py-0.5 rounded font-bold text-[10px]">🚩 WATCH</span>' : ''}
+                    <button type="button" onclick="openShop360(document.getElementById('p_addOutlet').value)" class="ml-auto text-theme font-bold hover:underline"><i class="fas fa-store"></i> Profile</button></div>`;
+            } else {
+                const sim = findSimilarShops(t).matches;
+                strip.innerHTML = sim.length
+                    ? `<div class="text-[11px] md:text-xs text-orange-700"><i class="fas fa-exclamation-triangle"></i> New name. Did you mean: ${sim.map(m => `<button type="button" data-n="${escH(m.name)}" onclick="useSuggestedOutlet(this.dataset.n)" class="px-2 py-0.5 mx-0.5 rounded bg-orange-100 hover:bg-orange-200 font-bold">${escH(m.name)}</button>`).join('')}</div>`
+                    : `<div class="text-[11px] md:text-xs text-blue-600"><i class="fas fa-star"></i> New shop (no previous records)</div>`;
+            }
+        }
+        function useSuggestedOutlet(name) { const i = document.getElementById('p_addOutlet'); i.value = name; updateAutoRep(); saveDraft(); updateOutletInfo(); i.focus(); }
+
+        async function addToPendingCart() {
+            const oEl = document.getElementById('p_addOutlet');
+            const o0 = oEl.value.trim(); const bill0 = document.getElementById('p_addBillNo').value.trim(); const c = parseFloat(document.getElementById('p_addCredit').value);
+            if (!o0 || isNaN(c) || c <= 0) return addToPendingCartCore(); // core shows the validation error
+            // 1) typo guard
+            const sim = findSimilarShops(o0);
+            if (!sim.exact && sim.matches.length && !acceptedNewNames.has(normName(o0))) {
+                const best = sim.matches[0];
+                const r = await Swal.fire({ icon: 'question', title: 'නම නිවැරදිද?', html: `<div class="text-sm">ඔබ ලියූ නම: <b class="text-red-500">${escH(normName(o0))}</b><br>පද්ධතියේ ඇති සමාන නම: <b class="text-green-600">${escH(best.name)}</b> (${best.bills} bills)${sim.matches.length > 1 ? '<br><span class="text-xs text-gray-500">තවත්: ' + sim.matches.slice(1).map(m => escH(m.name)).join(', ') + '</span>' : ''}</div>`, showDenyButton: true, showCancelButton: true, confirmButtonText: `"${best.name}" භාවිතා කරන්න`, denyButtonText: 'මා ලියූ නමම තබන්න', cancelButtonText: 'අවලංගු' });
+                if (r.isConfirmed) { oEl.value = best.name; updateAutoRep(); saveDraft(); updateOutletInfo(); }
+                else if (r.isDenied) acceptedNewNames.add(normName(o0));
+                else return;
+            }
+            const name = normName(oEl.value); const key = name; const warnings = [];
+            // 2) duplicate bill number
+            if (bill0) {
+                const bn = bill0.toUpperCase();
+                const dup = (dbCache || []).find(b => String(b.billNo || '').toUpperCase() === bn);
+                if (dup) warnings.push(`බිල් අංකය <b>${escH(bn)}</b> දැනටමත් පද්ධතියේ ඇත (${escH(dup.outlet)} • ${escH(dup.date)} • Rs. ${fmt(dup.credit)}).`);
+                else if (pendingCart.some(p => String(p.billNo || '').toUpperCase() === bn)) warnings.push(`බිල් අංකය <b>${escH(bn)}</b> Pending ලැයිස්තුවේ දැනටමත් ඇත.`);
+            }
+            // 3) watch-list + 4) credit limit
+            const ex = getShopExtra(name); const st = shopStat(name);
+            if (ex.watch) warnings.push(`🚩 මෙම කඩය <b>Watch-list</b> හි ඇත${ex.watchNote ? ': ' + escH(ex.watchNote) : ''}.`);
+            const lim = num(ex.limit);
+            if (lim > 0) { const total = (st ? st.balance : 0) + pendingForShop(key) + c; if (total > lim) warnings.push(`ණය සීමාව <b>Rs. ${fmt(lim)}</b> ඉක්මවයි. මුළු ශේෂය Rs. ${fmt(total)} (Rs. ${fmt(total - lim)} ඉක්මවීමක්).`); }
+            if (st && st.risk.grade === 'D' && !ex.watch) warnings.push(`මෙම කඩයේ අවදානම් මට්ටම <b>RISK D (Very High)</b> - පැරණි ශේෂයන් ඇත.`);
+            if (warnings.length) {
+                const r = await Swal.fire({ icon: 'warning', title: 'අවධානයට!', html: `<div class="text-left text-sm space-y-2">${warnings.map(w => `<p>• ${w}</p>`).join('')}</div>`, showCancelButton: true, confirmButtonText: 'ඉදිරියට යන්න', cancelButtonText: 'අවලංගු', confirmButtonColor: '#f59e0b' });
+                if (!r.isConfirmed) return;
+            }
+            addToPendingCartCore();
+            updateOutletInfo();
+        }
+
+        // =====================================================================
+        // SHOP 360 PROFILE (contact, credit limit, watch-list, promises, statement, reminders)
+        // =====================================================================
+        let s360Current = '';
+        function openShop360(name) {
+            const n = normName(name); if (!n) return;
+            s360Current = n; renderShop360();
+            const m = document.getElementById('modal-shop360'); m.classList.remove('hidden');
+        }
+        function renderShop360() {
+            const n = s360Current; const body = document.getElementById('s360Body'); if (!body) return;
+            const s = shopStat(n); const ex = getShopExtra(n); const today = localToday();
+            document.getElementById('s360Title').innerHTML = `<i class="fas fa-store text-theme"></i> ${escH(n)} ${s ? riskBadge(s.risk) : ''} ${ex.watch ? '<span class="bg-red-600 text-white px-2 py-0.5 rounded font-bold text-[10px] align-middle">🚩 WATCH</span>' : ''}`;
+            if (!s) { body.innerHTML = `<p class="text-center text-gray-400 italic p-8">No bills recorded for this shop yet.</p>`; return; }
+            const lim = num(ex.limit);
+            const cards = [['Total Credit', fmt(s.credit), 'text-indigo-600'], ['Collected', fmt(s.collected), 'text-emerald-600'], ['Balance', fmt(s.balance), 'text-red-500'], ['Bills (open)', `${s.bills.length} (${s.openBills})`, 'text-gray-700'], ['Avg days to pay', s.avgPayDays ? s.avgPayDays + 'd' : '-', 'text-orange-600'], ['Last payment', s.lastPay ? `${fmt(s.lastPay.amt)}<br><span class="text-[10px] text-gray-400">${escH(s.lastPay.date)}</span>` : '-', 'text-blue-600']];
+            const agingHTML = AGING_KEYS.map(k => `<div class="text-center p-2 rounded-xl subpanel"><p class="text-[9px] font-bold text-gray-400">${k} d</p><p class="text-xs font-extrabold ${s.aging[k] > 0 ? 'text-red-500' : 'text-gray-300'}">${fmt(s.aging[k])}</p></div>`).join('');
+            const bills = s.bills.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            const billRows = bills.map(b => { const bal = num(b.credit) - num(b.collected); const age = daysBetween(b.date, today); return `<tr class="border-b ${bal <= 0 ? 'opacity-50' : ''}"><td class="p-2 text-[11px]">${escH(b.date)}</td><td class="p-2 text-xs font-bold">${escH(b.billNo || '-')}</td><td class="p-2 text-right text-xs">${fmt(b.credit)}</td><td class="p-2 text-right text-xs text-green-600">${fmt(b.collected)}</td><td class="p-2 text-right text-xs font-bold text-red-500">${fmt(bal)}</td><td class="p-2 text-center text-[10px] ${bal > 0 && age > 30 ? 'text-red-500 font-bold' : 'text-gray-400'}">${bal > 0 ? age + 'd' : 'PAID'}</td></tr>`; }).join('');
+            const pays = []; s.bills.forEach(b => (b.installments || []).forEach(i => pays.push({ d: i.date, a: num(i.amt), t: isChequeIns(i) ? 'Cheque' : 'Cash', ret: !!i.returned, bn: b.billNo })));
+            pays.sort((a, b) => (b.d || '').localeCompare(a.d || ''));
+            const payRows = pays.slice(0, 10).map(p => `<tr class="border-b"><td class="p-2 text-[11px]">${escH(p.d)}</td><td class="p-2 text-[11px]">${escH(p.bn || '-')}</td><td class="p-2 text-[10px]">${p.t}${p.ret ? ' <b class="text-red-500">(RET)</b>' : ''}</td><td class="p-2 text-right text-xs font-bold text-green-600">${fmt(p.a)}</td></tr>`).join('') || `<tr><td colspan="4" class="p-3 text-center text-xs text-gray-400 italic">No payments yet</td></tr>`;
+            const proms = Object.values(extrasCache.promises).filter(p => normName(p.outlet) === n).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            const promRows = proms.map(p => promiseRowHTML(p, false)).join('') || `<p class="text-xs text-gray-400 italic">No promises recorded.</p>`;
+            body.innerHTML = `
+              <div class="grid grid-cols-2 md:grid-cols-6 gap-2">${cards.map(c => `<div class="subpanel rounded-xl p-2.5"><p class="text-[9px] font-bold text-gray-400 uppercase">${c[0]}</p><p class="text-sm font-extrabold ${c[2]}">${c[1]}</p></div>`).join('')}</div>
+              <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Aging of outstanding balance</p><div class="grid grid-cols-3 md:grid-cols-6 gap-2">${agingHTML}</div></div>
+              <div class="subpanel rounded-2xl p-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div><label class="text-[10px] font-bold text-gray-500 uppercase">Phone / WhatsApp</label><input id="s360_phone" type="tel" value="${escH(ex.phone || '')}" placeholder="07XXXXXXXX" class="w-full p-2 border rounded-lg text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-500 uppercase">Credit Limit (Rs.) ${lim > 0 ? `- used ${Math.round(s.balance / lim * 100)}%` : ''}</label><input id="s360_limit" type="number" value="${lim || ''}" placeholder="0 = no limit" class="w-full p-2 border rounded-lg text-sm"></div>
+                <div class="md:col-span-2"><label class="text-[10px] font-bold text-gray-500 uppercase">Address / Notes</label><input id="s360_notes" type="text" value="${escH(ex.notes || '')}" placeholder="Owner name, landmarks, best time to collect..." class="w-full p-2 border rounded-lg text-sm"></div>
+                <div class="flex items-center gap-2"><input id="s360_watch" type="checkbox" class="w-4 h-4" ${ex.watch ? 'checked' : ''}><label for="s360_watch" class="text-xs font-bold text-red-600">🚩 Watch-list (warn before giving new credit)</label></div>
+                <div><input id="s360_watchNote" type="text" value="${escH(ex.watchNote || '')}" placeholder="Reason (optional)" class="w-full p-2 border rounded-lg text-sm"></div>
+                <button onclick="saveShopProfile()" class="md:col-span-2 bg-theme text-white font-bold py-2 rounded-xl text-sm"><i class="fas fa-save"></i> Save Profile</button>
+              </div>
+              <div class="subpanel rounded-2xl p-3">
+                <p class="text-xs font-bold text-gray-600 mb-2"><i class="fas fa-handshake text-orange-500"></i> Promise to Pay</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2"><input id="s360_pdate" type="date" value="${addDaysStr(today, 3)}" class="p-2 border rounded-lg text-sm"><input id="s360_pamt" type="number" placeholder="Amount (Rs.)" value="${Math.round(s.balance) || ''}" class="p-2 border rounded-lg text-sm"><input id="s360_pnote" type="text" placeholder="Note" class="p-2 border rounded-lg text-sm"><button onclick="addPromiseFromProfile()" class="bg-orange-500 text-white font-bold rounded-lg text-sm py-2"><i class="fas fa-plus"></i> Add</button></div>
+                <div class="space-y-1">${promRows}</div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="sendShopReminder(s360Current)" class="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fab fa-whatsapp"></i> WhatsApp Reminder</button>
+                <button onclick="downloadShopStatement(s360Current)" class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fas fa-file-pdf"></i> Statement PDF</button>
+                <button onclick="closeModal('modal-shop360'); filterByShopName(s360Current)" class="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fas fa-table"></i> Open in Master Data</button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="md:col-span-2"><p class="text-xs font-bold text-gray-600 mb-1">All Bills (${bills.length})</p><div class="max-h-60 overflow-y-auto border rounded-xl"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-2 text-[10px]">Date</th><th class="p-2 text-[10px]">Bill</th><th class="p-2 text-[10px] text-right">Credit</th><th class="p-2 text-[10px] text-right">Paid</th><th class="p-2 text-[10px] text-right">Balance</th><th class="p-2 text-[10px] text-center">Age</th></tr></thead><tbody>${billRows}</tbody></table></div></div>
+                <div><p class="text-xs font-bold text-gray-600 mb-1">Recent Payments</p><div class="max-h-60 overflow-y-auto border rounded-xl"><table class="w-full text-left"><tbody>${payRows}</tbody></table></div></div>
+              </div>`;
+        }
+        function saveShopProfile() {
+            const n = s360Current; if (!n) return;
+            setShopExtra(n, { phone: document.getElementById('s360_phone').value.trim(), limit: num(document.getElementById('s360_limit').value), notes: document.getElementById('s360_notes').value.trim(), watch: document.getElementById('s360_watch').checked, watchNote: document.getElementById('s360_watchNote').value.trim() });
+            logAction(`Shop profile updated: ${n}`); Toast.fire({ icon: 'success', title: 'Profile saved' });
+            renderShop360(); refreshAlertBadge(); updateOutletInfo();
+        }
+        function addPromiseFromProfile() {
+            const date = document.getElementById('s360_pdate').value; const amt = num(document.getElementById('s360_pamt').value);
+            if (!date || amt <= 0) return Swal.fire('Required', 'Select a date and enter the promised amount.', 'warning');
+            setPromise({ id: 'P' + Date.now().toString(36) + Math.random().toString(36).substr(2, 3), outlet: s360Current, date, amt, note: document.getElementById('s360_pnote').value.trim(), status: 'open', by: currentUserEmail || role || '', created: localToday() });
+            logAction(`Promise to pay: ${s360Current} Rs.${amt} on ${date}`); Toast.fire({ icon: 'success', title: 'Promise saved' }); renderShop360(); refreshAlertBadge();
+        }
+        function promiseRowHTML(p, showShop) {
+            const today = localToday(); const due = p.status === 'open' && p.date <= today; const overdue = p.status === 'open' && p.date < today;
+            const badge = p.status === 'kept' ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">KEPT</span>' : p.status === 'broken' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">BROKEN</span>' : overdue ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">OVERDUE</span>' : due ? '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold">TODAY</span>' : '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">OPEN</span>';
+            return `<div class="flex flex-wrap items-center gap-2 text-xs bg-white dark:bg-slate-800 border rounded-lg px-2 py-1.5">${badge}<b>${escH(p.date)}</b><b class="text-green-600">Rs. ${fmt(p.amt)}</b>${showShop ? `<span class="font-semibold text-theme cursor-pointer hover:underline" data-n="${escH(p.outlet)}" onclick="openShop360(this.dataset.n)">${escH(p.outlet)}</span>` : ''}<span class="text-gray-500 flex-1">${escH(p.note || '')}</span>
+                ${p.status === 'open' ? `<button onclick="setPromiseStatus('${p.id}','kept')" class="text-green-600 hover:bg-green-50 px-2 rounded font-bold" title="Mark kept"><i class="fas fa-check"></i></button><button onclick="setPromiseStatus('${p.id}','broken')" class="text-orange-600 hover:bg-orange-50 px-2 rounded font-bold" title="Mark broken"><i class="fas fa-ban"></i></button>` : ''}
+                <button onclick="removePromise('${p.id}')" class="text-red-400 hover:bg-red-50 px-2 rounded" title="Delete"><i class="fas fa-trash"></i></button></div>`;
+        }
+        function setPromiseStatus(id, st) { const p = extrasCache.promises[id]; if (!p) return; p.status = st; setPromise(p); refreshAfterExtras(); }
+        function renderShop360IfOpen() { const m = document.getElementById('modal-shop360'); if (m && !m.classList.contains('hidden')) renderShop360(); }
+        function removePromise(id) { deletePromiseRec(id); refreshAfterExtras(); renderShop360IfOpen(); }
+
+        // ---------- WhatsApp reminder ----------
+        function waPhone(raw) { let d = String(raw || '').replace(/\D/g, ''); if (!d) return ''; if (d.startsWith('00')) d = d.slice(2); if (d.startsWith('0') && d.length === 10) d = '94' + d.slice(1); else if (d.length === 9) d = '94' + d; return d; }
+        function sendShopReminder(name) {
+            const n = normName(name); const s = shopStat(n); if (!s) return;
+            const open = s.bills.filter(b => num(b.credit) - num(b.collected) > 0.009).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            if (!open.length) return Swal.fire('No dues', 'This shop has no outstanding balance.', 'info');
+            const lines = open.slice(0, 8).map(b => `• ${b.billNo || 'N/A'} (${b.date}) - Rs. ${fmt(num(b.credit) - num(b.collected))}`).join('\n') + (open.length > 8 ? `\n• ...සහ තවත් බිල්පත් ${open.length - 8}ක්` : '');
+            const msg = `*${getSettings().name}*\nආයුබෝවන් ${n},\nඔබගේ ගිණුමේ පහත ගෙවීම් ඉතිරිව ඇත:\n${lines}\n\n*මුළු ශේෂය: Rs. ${fmt(s.balance)}*\nකරුණාකර හැකි ඉක්මනින් ගෙවීම් සිදු කරන්න. ස්තූතියි!`;
+            const ph = waPhone(getShopExtra(n).phone);
+            window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
+            logAction(`WhatsApp reminder opened: ${n}`);
+        }
+
+        // ---------- Statement PDF ----------
+        async function downloadShopStatement(name) {
+            const n = normName(name); const s = shopStat(n); if (!s) return; const set = getSettings(); const today = localToday();
+            const rows = []; s.bills.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(b => {
+                rows.push({ d: b.date, t: `Bill ${b.billNo || '-'}`, dr: num(b.credit), cr: 0 });
+                (b.installments || []).forEach(i => { if (!i.returned) rows.push({ d: i.date, t: `Payment (${isChequeIns(i) ? 'Cheque' : 'Cash'}) - ${b.billNo || '-'}`, dr: 0, cr: num(i.amt) }); });
+            });
+            rows.sort((a, b) => (a.d || '').localeCompare(b.d || '')); let run = 0;
+            const trs = rows.map(r => { run += r.dr - r.cr; return `<tr><td style="padding:5px;border-bottom:1px solid #e5e7eb">${escH(r.d)}</td><td style="padding:5px;border-bottom:1px solid #e5e7eb">${escH(r.t)}</td><td style="padding:5px;border-bottom:1px solid #e5e7eb;text-align:right">${r.dr ? fmt(r.dr) : ''}</td><td style="padding:5px;border-bottom:1px solid #e5e7eb;text-align:right;color:#059669">${r.cr ? fmt(r.cr) : ''}</td><td style="padding:5px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:bold">${fmt(run)}</td></tr>`; }).join('');
+            const wrap = document.createElement('div'); wrap.style.cssText = 'position:fixed;left:-10000px;top:0;width:780px;background:#fff;color:#111;padding:28px;font-family:Arial,sans-serif;font-size:12px';
+            wrap.innerHTML = `<h2 style="margin:0;color:#1d4ed8;font-size:24px">${escH(set.name)}</h2><p style="margin:2px 0 14px;color:#6b7280">Account Statement • ${today}</p><div style="display:flex;justify-content:space-between;margin-bottom:14px"><div><b style="font-size:16px">${escH(n)}</b><br>${escH(s.mainStreet || '')}${getShopExtra(n).phone ? '<br>Tel: ' + escH(getShopExtra(n).phone) : ''}</div><div style="text-align:right">Total Credit: <b>Rs. ${fmt(s.credit)}</b><br>Total Paid: <b style="color:#059669">Rs. ${fmt(s.collected)}</b><br>Balance Due: <b style="color:#dc2626;font-size:15px">Rs. ${fmt(s.balance)}</b></div></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f3f4f6"><th style="padding:6px;text-align:left">Date</th><th style="padding:6px;text-align:left">Description</th><th style="padding:6px;text-align:right">Debit</th><th style="padding:6px;text-align:right">Credit</th><th style="padding:6px;text-align:right">Balance</th></tr></thead><tbody>${trs}</tbody></table><p style="margin-top:18px;color:#9ca3af;font-size:10px;text-align:center">System generated statement • ${escH(set.name)}</p>`;
+            document.body.appendChild(wrap); Toast.fire({ icon: 'info', title: 'Generating statement...' });
+            try { await html2pdf().set({ margin: 0.3, filename: `Statement_${n.replace(/[^A-Z0-9]+/g, '_')}_${today}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 780 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(wrap).save(); } finally { wrap.remove(); }
+        }
+
+        // =====================================================================
+        // SMART ALERTS (bell), DASHBOARD WIDGETS
+        // =====================================================================
+        const BACKUP_KEY = 'geethara_last_backup';
+        const backupAgeDays = () => { try { const v = localStorage.getItem(BACKUP_KEY); if (!v) return null; return Math.floor((Date.now() - new Date(v).getTime()) / 86400000); } catch (e) { return null; } };
+        function upcomingCheques(maxDays) {
+            const today = localToday(); const out = [];
+            (dbCache || []).forEach(b => (b.installments || []).forEach(ins => {
+                if (!isChequeIns(ins) || ins.returned) return; const p = parseChequeDetails(ins.by, ins.bankName); if (!p.bankDate || p.bankDate === '-') return;
+                const dd = daysBetween(today, p.bankDate); if (dd >= 0 && dd <= maxDays) out.push({ outlet: b.outlet, bank: p.bankName, no: p.chqNo, date: p.bankDate, amt: num(ins.amt), dd });
+            }));
+            return out.sort((a, b) => a.date.localeCompare(b.date));
+        }
+        function computeAlerts(full) {
+            const out = []; const today = localToday(); const idx = getShopIndex();
+            const chq = upcomingCheques(3); const cT = chq.filter(c => c.dd === 0); const cS = chq.filter(c => c.dd > 0);
+            if (cT.length) out.push({ lv: 'amber', icon: 'fa-money-check', text: `අද බැංකුගත කළ යුතු චෙක්පත් ${cT.length} (Rs. ${fmt(cT.reduce((s, c) => s + c.amt, 0))})`, go: "nav('cheques')" });
+            if (cS.length) out.push({ lv: 'blue', icon: 'fa-calendar-day', text: `දින 3ක් ඇතුළත බැංකුගත වන චෙක්පත් ${cS.length} (Rs. ${fmt(cS.reduce((s, c) => s + c.amt, 0))})`, go: "nav('cheques')" });
+            const prom = Object.values(extrasCache.promises).filter(p => p.status === 'open' && p.date <= today);
+            if (prom.length) out.push({ lv: prom.some(p => p.date < today) ? 'red' : 'amber', icon: 'fa-handshake', text: `ගෙවීමට පොරොන්දු වූ දිනය පැමිණි කඩ ${prom.length} (Rs. ${fmt(prom.reduce((s, p) => s + num(p.amt), 0))})`, go: "openInsights('promises')" });
+            let over = 0, watch = 0, old90 = 0, old90amt = 0;
+            idx.map.forEach(s => { const ex = getShopExtra(s.key); const lim = num(ex.limit); if (lim > 0 && s.balance > lim) over++; if (ex.watch && s.balance > 0) watch++; if (s.aging['90+'] > 0) { old90++; old90amt += s.aging['90+']; } });
+            if (over) out.push({ lv: 'red', icon: 'fa-hand-paper', text: `ණය සීමාව ඉක්මවූ කඩ ${over}`, go: "openInsights('debtors')" });
+            if (old90) out.push({ lv: 'red', icon: 'fa-exclamation-circle', text: `දින 90ට වැඩි පැරණි ණය: කඩ ${old90} (Rs. ${fmt(old90amt)})`, go: "openInsights('aging')" });
+            if (watch) out.push({ lv: 'amber', icon: 'fa-flag', text: `Watch-list කඩ ${watch}ක ශේෂ ඇත`, go: "openInsights('debtors')" });
+            if (role === 'Admin') {
+                const ba = backupAgeDays(); if (ba === null || ba >= 7) out.push({ lv: 'amber', icon: 'fa-save', text: ba === null ? 'මෙම උපාංගයෙන් Backup එකක් ගෙන නැත' : `අවසන් Backup එක දින ${ba}කට පෙර`, go: 'backupDB()' });
+                if (full) { const sc = scanIntegrity(); if (sc.total > 0) out.push({ lv: 'amber', icon: 'fa-heartbeat', text: `දත්ත සෞඛ්‍ය ගැටළු ${sc.total}ක් හමුවිය`, go: "openInsights('health')" }); }
+            }
+            return out;
+        }
+        function refreshAlertBadge() {
+            const b = document.getElementById('alertBadge'); if (!b) return;
+            let n = 0; try { n = computeAlerts(false).filter(a => a.lv !== 'blue').length; } catch (e) {}
+            b.innerText = n; b.classList.toggle('hidden', n === 0);
+        }
+        function openAlerts() {
+            const list = computeAlerts(true); const col = { red: 'bg-red-50 text-red-700 border-red-200', amber: 'bg-orange-50 text-orange-700 border-orange-200', blue: 'bg-blue-50 text-blue-700 border-blue-200' };
+            const html = list.length ? list.map((a, i) => `<div onclick="Swal.close();${a.go}" class="cursor-pointer flex items-center gap-3 p-3 rounded-xl border text-left text-sm font-semibold mb-2 ${col[a.lv]}"><i class="fas ${a.icon} text-lg w-6 text-center"></i><span class="flex-1">${a.text}</span><i class="fas fa-chevron-right text-xs opacity-50"></i></div>`).join('') : `<p class="text-green-600 font-bold p-4"><i class="fas fa-check-circle text-3xl block mb-2"></i>සියල්ල හොඳින්! අවධානය අවශ්‍ය දෙයක් නැත.</p>`;
+            Swal.fire({ title: '🔔 Smart Alerts', html, showConfirmButton: false, showCloseButton: true, width: 560 });
+        }
+
+        function renderDashboardExtras() {
+            const page = document.getElementById('page-dashboard'); if (!page) return;
+            let box = document.getElementById('dashExtras'); if (!box) { box = document.createElement('div'); box.id = 'dashExtras'; box.className = 'space-y-6'; page.appendChild(box); }
+            const today = localToday(); const idx = getShopIndex(); const target = getDailyTarget();
+            let tCol = 0; (dbCache || []).forEach(b => (b.installments || []).forEach(i => { if (i.date === today && !i.returned) tCol += num(i.amt); }));
+            const pct = target > 0 ? Math.min(100, Math.round(tCol / target * 100)) : 0;
+            const aging = {}; AGING_KEYS.forEach(k => aging[k] = 0); idx.map.forEach(s => AGING_KEYS.forEach(k => aging[k] += s.aging[k])); const agTot = AGING_KEYS.reduce((s, k) => s + aging[k], 0) || 1;
+            const agColors = ['#10b981', '#84cc16', '#eab308', '#f97316', '#ef4444', '#991b1b'];
+            const chq = upcomingCheques(7).slice(0, 6);
+            const prom = Object.values(extrasCache.promises).filter(p => p.status === 'open').sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+            const top = [...idx.map.values()].filter(s => s.balance > 0).sort((a, b) => b.balance - a.balance).slice(0, 5);
+            const isAdmin = role === 'Admin';
+            box.innerHTML = `
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="glass rounded-3xl p-4 lg:p-5">
+                  <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-sm"><i class="fas fa-bullseye text-theme"></i> Today's Collection Target</h3>${isAdmin ? `<button onclick="setDailyTarget()" class="text-[11px] font-bold text-theme hover:underline"><i class="fas fa-pen"></i> Set</button>` : ''}</div>
+                  <p class="text-2xl font-extrabold text-emerald-600">Rs. ${fmt(tCol)}</p>
+                  ${target > 0 ? `<div class="h-3 rounded-full bg-gray-200 dark:bg-slate-700 mt-2 overflow-hidden"><div class="h-full rounded-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-theme'}" style="width:${pct}%;background:${pct >= 100 ? '#10b981' : 'var(--primary)'}"></div></div><p class="text-[11px] text-gray-500 mt-1">${pct}% of Rs. ${fmt(target)} • remaining Rs. ${fmt(Math.max(0, target - tCol))}</p>` : `<p class="text-[11px] text-gray-400 mt-2">No daily target set${isAdmin ? ' - click "Set"' : ''}.</p>`}
+                </div>
+                <div class="glass rounded-3xl p-4 lg:p-5 lg:col-span-2">
+                  <h3 class="font-bold text-sm mb-2"><i class="fas fa-hourglass-half text-orange-500"></i> Outstanding by Age</h3>
+                  <div class="flex h-5 rounded-full overflow-hidden bg-gray-100 dark:bg-slate-700">${AGING_KEYS.map((k, i) => `<div style="width:${aging[k] / agTot * 100}%;background:${agColors[i]}" title="${k} days: Rs. ${fmt(aging[k])}"></div>`).join('')}</div>
+                  <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-2">${AGING_KEYS.map((k, i) => `<div class="text-center"><p class="text-[9px] font-bold text-gray-400"><span style="color:${agColors[i]}">●</span> ${k}d</p><p class="text-[11px] font-extrabold">${fmt(aging[k])}</p></div>`).join('')}</div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="glass rounded-3xl p-4 lg:p-5"><h3 class="font-bold text-sm mb-2"><i class="fas fa-money-check text-blue-500"></i> Cheques banking in next 7 days</h3>
+                  ${chq.length ? chq.map(c => `<div class="flex justify-between text-xs py-1 border-b dark:border-slate-700"><span class="truncate pr-2"><b>${escH(c.date)}</b> ${c.dd === 0 ? '<span class="text-red-500 font-bold">TODAY</span>' : ''}<br><span class="text-gray-500">${escH(c.outlet)}</span></span><b class="text-green-600 whitespace-nowrap">Rs. ${fmt(c.amt)}</b></div>`).join('') : '<p class="text-xs text-gray-400 italic">No cheques due.</p>'}</div>
+                <div class="glass rounded-3xl p-4 lg:p-5"><h3 class="font-bold text-sm mb-2"><i class="fas fa-handshake text-orange-500"></i> Promises to Pay</h3>
+                  ${prom.length ? prom.map(p => `<div class="text-xs py-1 border-b dark:border-slate-700 flex justify-between gap-2"><span class="truncate"><b class="${p.date < today ? 'text-red-500' : ''}">${escH(p.date)}</b> <span class="text-theme font-semibold cursor-pointer" data-n="${escH(p.outlet)}" onclick="openShop360(this.dataset.n)">${escH(p.outlet)}</span></span><b class="whitespace-nowrap">Rs. ${fmt(p.amt)}</b></div>`).join('') : '<p class="text-xs text-gray-400 italic">No open promises.</p>'}</div>
+                <div class="glass rounded-3xl p-4 lg:p-5"><h3 class="font-bold text-sm mb-2"><i class="fas fa-user-clock text-red-500"></i> Top 5 Debtors</h3>
+                  ${top.length ? top.map(s => `<div class="text-xs py-1 border-b dark:border-slate-700 flex justify-between gap-2 items-center"><span class="truncate"><span class="text-theme font-semibold cursor-pointer" data-n="${escH(s.name)}" onclick="openShop360(this.dataset.n)">${escH(s.name)}</span> ${riskBadge(s.risk)}</span><b class="text-red-500 whitespace-nowrap">Rs. ${fmt(s.balance)}</b></div>`).join('') : '<p class="text-xs text-gray-400 italic">No debtors.</p>'}</div>
+              </div>`;
+        }
+        function setDailyTarget() {
+            Swal.fire({ title: 'Daily Collection Target (Rs.)', input: 'number', inputValue: getDailyTarget() || '', showCancelButton: true }).then(r => { if (r.isConfirmed) { setExtraSetting('dailyTarget', num(r.value)); renderDashboardExtras(); Toast.fire({ icon: 'success', title: 'Target saved' }); } });
+        }
+
+        // =====================================================================
+        // INSIGHTS PAGE (Aging, Debtors & Risk, Reps/Routes, Trends & P&L, Promises, Day Close, Cash Counter, Collection Sheet, Data Health)
+        // =====================================================================
+        const INS_TABS = [
+            { id: 'aging', label: 'Aging', icon: 'fa-hourglass-half', admin: true }, { id: 'debtors', label: 'Debtors & Risk', icon: 'fa-user-clock', admin: true },
+            { id: 'team', label: 'Reps & Routes', icon: 'fa-users', admin: true }, { id: 'trends', label: 'Trends & P&L', icon: 'fa-chart-line', admin: true },
+            { id: 'promises', label: 'Promises', icon: 'fa-handshake' }, { id: 'dayclose', label: 'Day Close', icon: 'fa-clipboard-check', admin: true },
+            { id: 'cash', label: 'Cash Counter', icon: 'fa-coins' }, { id: 'sheet', label: 'Collection Sheet', icon: 'fa-route' }, { id: 'health', label: 'Data Health', icon: 'fa-heartbeat', admin: true }
+        ];
+        let insTab = null, insChart = null, insDebtQ = '', insDayDate = '', insSheetRoute = '', insSheetSort = 'age', cashCounts = {}, cashOpening = 0;
+        const insAllowed = () => INS_TABS.filter(t => role === 'Admin' || !t.admin);
+        function openInsights(tab) { insTab = tab; nav('insights'); }
+        function insSetTab(t) { insTab = t; renderInsights(); }
+        function renderInsights() {
+            const tabsEl = document.getElementById('insTabs'); const body = document.getElementById('insBody'); if (!tabsEl || !body) return;
+            const allowed = insAllowed(); if (!insTab || !allowed.some(t => t.id === insTab)) insTab = allowed[0].id;
+            tabsEl.innerHTML = allowed.map(t => `<button onclick="insSetTab('${t.id}')" class="px-3 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition ${t.id === insTab ? 'bg-theme text-white shadow' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'}"><i class="fas ${t.icon} mr-1"></i>${t.label}</button>`).join('');
+            if (insChart) { try { insChart.destroy(); } catch (e) {} insChart = null; }
+            try { ({ aging: insAging, debtors: insDebtors, team: insTeam, trends: insTrends, promises: insPromises, dayclose: insDayClose, cash: insCash, sheet: insSheet, health: insHealth })[insTab](body); } catch (e) { console.error(e); body.innerHTML = `<p class="p-6 text-red-500">Error: ${escH(e.message)}</p>`; }
+        }
+        const insTable = (heads, rows, aligns) => `<div class="overflow-x-auto"><table class="w-full text-left text-xs md:text-sm whitespace-nowrap"><thead class="bg-gray-100 dark:bg-slate-900"><tr>${heads.map((h, i) => `<th class="p-2 md:p-3 ${aligns && aligns[i] === 'r' ? 'text-right' : aligns && aligns[i] === 'c' ? 'text-center' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-100 dark:divide-slate-700">${rows.join('') || `<tr><td colspan="${heads.length}" class="p-6 text-center text-gray-400 italic">No data</td></tr>`}</tbody></table></div>`;
+        const shopLink = n => `<span class="font-semibold text-theme cursor-pointer hover:underline" data-n="${escH(n)}" onclick="openShop360(this.dataset.n)">${escH(n)}</span>`;
+
+        // ---- Aging ----
+        function insAging(body) {
+            const today = localToday(); const tot = {}, cnt = {}; AGING_KEYS.forEach(k => { tot[k] = 0; cnt[k] = 0; }); const byRoute = {};
+            (dbCache || []).forEach(b => { const bal = num(b.credit) - num(b.collected); if (bal <= 0.009) return; const k = agingBucket(Math.max(0, daysBetween(b.date, today))); tot[k] += bal; cnt[k]++; const r = b.street || '(none)'; byRoute[r] = byRoute[r] || {}; byRoute[r][k] = (byRoute[r][k] || 0) + bal; });
+            const grand = AGING_KEYS.reduce((s, k) => s + tot[k], 0); const colors = ['#10b981', '#84cc16', '#eab308', '#f97316', '#ef4444', '#991b1b'];
+            const routes = Object.keys(byRoute).sort((a, b) => AGING_KEYS.reduce((s, k) => s + (byRoute[b][k] || 0), 0) - AGING_KEYS.reduce((s, k) => s + (byRoute[a][k] || 0), 0));
+            body.innerHTML = `<div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">${AGING_KEYS.map((k, i) => `<div class="glass rounded-2xl p-3 border-t-4" style="border-color:${colors[i]}"><p class="text-[10px] font-bold text-gray-400 uppercase">${k} days</p><p class="text-lg font-extrabold">Rs. ${fmt(tot[k])}</p><p class="text-[10px] text-gray-400">${cnt[k]} bills • ${grand ? Math.round(tot[k] / grand * 100) : 0}%</p></div>`).join('')}</div>
+              <div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-3">Aging by Route (outstanding balance)</h3>${insTable(['Route', ...AGING_KEYS.map(k => k + 'd'), 'Total'], routes.map(r => `<tr><td class="p-2 md:p-3 font-bold">${escH(r)}</td>${AGING_KEYS.map(k => `<td class="p-2 md:p-3 text-right ${k === '90+' && byRoute[r][k] ? 'text-red-600 font-bold' : ''}">${byRoute[r][k] ? fmt(byRoute[r][k]) : '-'}</td>`).join('')}<td class="p-2 md:p-3 text-right font-extrabold">${fmt(AGING_KEYS.reduce((s, k) => s + (byRoute[r][k] || 0), 0))}</td></tr>`), ['l', 'r', 'r', 'r', 'r', 'r', 'r', 'r'])}</div>`;
+        }
+        // ---- Debtors & Risk ----
+        function insDebtors(body) {
+            const q = insDebtQ.trim().toUpperCase(); let list = [...getShopIndex().map.values()].filter(s => s.balance > 0.009);
+            if (q) list = list.filter(s => s.name.includes(q)); list.sort((a, b) => b.balance - a.balance); const shown = list.slice(0, 150);
+            const rows = shown.map(s => { const ex = getShopExtra(s.key); const lim = num(ex.limit); return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-800"><td class="p-2 md:p-3">${shopLink(s.name)} ${ex.watch ? '🚩' : ''}<br><span class="text-[10px] text-gray-400">${escH(s.mainStreet)}</span></td><td class="p-2 md:p-3 text-right font-extrabold text-red-500">${fmt(s.balance)}</td><td class="p-2 md:p-3 text-center">${s.oldestDue}d</td><td class="p-2 md:p-3 text-center">${s.avgPayDays ? s.avgPayDays + 'd' : '-'}</td><td class="p-2 md:p-3 text-center">${lim > 0 ? `<span class="${s.balance > lim ? 'text-red-600 font-bold' : ''}">${Math.round(s.balance / lim * 100)}%</span>` : '-'}</td><td class="p-2 md:p-3 text-center">${riskBadge(s.risk)}</td><td class="p-2 md:p-3 text-center"><button data-n="${escH(s.name)}" onclick="sendShopReminder(this.dataset.n)" class="w-7 h-7 rounded bg-green-50 text-green-600 hover:bg-green-600 hover:text-white" title="WhatsApp reminder"><i class="fab fa-whatsapp"></i></button></td></tr>`; });
+            body.innerHTML = `<div class="glass rounded-3xl p-4"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h3 class="font-bold text-sm">Debtors ranked by balance (${list.length})</h3><input type="text" value="${escH(insDebtQ)}" oninput="insDebtQ=this.value;clearTimeout(window._dq);window._dq=setTimeout(()=>{const p=this.selectionStart;renderInsights();const i=document.querySelector('#insBody input');if(i){i.focus();i.setSelectionRange(p,p);}},250)" placeholder="Search shop..." class="p-2 border rounded-xl text-sm w-48"></div>${insTable(['Shop', 'Balance', 'Oldest', 'Avg pay', 'Limit used', 'Risk', ''], rows, ['l', 'r', 'c', 'c', 'c', 'c', 'c'])}${list.length > 150 ? '<p class="text-xs text-gray-400 mt-2">Showing top 150 - use search to narrow.</p>' : ''}<p class="text-[10px] text-gray-400 mt-3">Risk grade combines: oldest unpaid age, average days to pay, returned cheques and credit-limit breaches (A = low, D = very high).</p></div>`;
+        }
+        // ---- Reps & Routes ----
+        function insTeam(body) {
+            const today = localToday(); const reps = {}, rts = {};
+            const upd = (m, k, b) => { const o = m[k] = m[k] || { n: 0, cr: 0, col: 0, od: 0 }; const bal = num(b.credit) - num(b.collected); o.n++; o.cr += num(b.credit); o.col += num(b.collected); if (bal > 0.009 && daysBetween(b.date, today) > 30) o.od += bal; };
+            (dbCache || []).forEach(b => { const r = (b.repName || '').trim().toUpperCase() || '(none)'; if (r === 'AI' || r === 'EXCEL IMPORT') return upd(reps, '(import / AI)', b); upd(reps, r, b); upd(rts, b.street || '(none)', b); });
+            const mk = m => Object.keys(m).sort((a, b) => m[b].cr - m[a].cr).map(k => { const o = m[k]; const pc = o.cr ? Math.round(o.col / o.cr * 100) : 0; return `<tr><td class="p-2 md:p-3 font-bold">${escH(k)}</td><td class="p-2 md:p-3 text-center">${o.n}</td><td class="p-2 md:p-3 text-right">${fmt(o.cr)}</td><td class="p-2 md:p-3 text-right text-green-600">${fmt(o.col)}</td><td class="p-2 md:p-3 text-center"><div class="inline-block w-20 h-2 rounded bg-gray-200 align-middle mr-1"><div class="h-2 rounded" style="width:${pc}%;background:${pc >= 80 ? '#10b981' : pc >= 50 ? '#f59e0b' : '#ef4444'}"></div></div><b>${pc}%</b></td><td class="p-2 md:p-3 text-right text-red-500 font-bold">${fmt(o.cr - o.col)}</td><td class="p-2 md:p-3 text-right ${o.od > 0 ? 'text-red-600 font-bold' : 'text-gray-400'}">${fmt(o.od)}</td></tr>`; });
+            const H = ['', 'Bills', 'Credit', 'Collected', 'Collection %', 'Balance', 'Overdue 30d+']; const A = ['l', 'c', 'r', 'r', 'c', 'r', 'r'];
+            body.innerHTML = `<div class="space-y-4"><div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-3"><i class="fas fa-user-tie text-theme"></i> Rep Performance</h3>${insTable(['Rep', ...H.slice(1)], mk(reps), A)}</div><div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-3"><i class="fas fa-route text-theme"></i> Route Performance</h3>${insTable(['Route', ...H.slice(1)], mk(rts), A)}</div></div>`;
+        }
+        // ---- Trends & P&L ----
+        function insTrends(body) {
+            const months = []; const d = new Date(); d.setDate(1); for (let i = 11; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); months.push(x.getFullYear() + '-' + pad2(x.getMonth() + 1)); }
+            const cr = {}, col = {}, ex = {}; months.forEach(m => { cr[m] = 0; col[m] = 0; ex[m] = 0; });
+            (dbCache || []).forEach(b => { const m = String(b.date || '').slice(0, 7); if (m in cr) cr[m] += num(b.credit); (b.installments || []).forEach(i => { if (i.returned) return; const mm = String(i.date || '').slice(0, 7); if (mm in col) col[mm] += num(i.amt); }); });
+            (expCache || []).forEach(e => { const m = String(e.date || '').slice(0, 7); if (m in ex) ex[m] += num(e.amt); });
+            body.innerHTML = `<div class="glass rounded-3xl p-4 mb-4"><h3 class="font-bold text-sm mb-2">Last 12 Months - Credit issued vs Collected vs Expenses</h3><canvas id="insTrendChart" height="110"></canvas></div><div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-2">Monthly Profit & Loss (cash basis: collections − expenses)</h3>${insTable(['Month', 'Credit Issued', 'Collected', 'Expenses', 'Net Cash (Collected − Expenses)'], months.slice().reverse().map(m => { const net = col[m] - ex[m]; return `<tr><td class="p-2 md:p-3 font-bold">${m}</td><td class="p-2 md:p-3 text-right">${fmt(cr[m])}</td><td class="p-2 md:p-3 text-right text-green-600">${fmt(col[m])}</td><td class="p-2 md:p-3 text-right text-red-500">${fmt(ex[m])}</td><td class="p-2 md:p-3 text-right font-extrabold ${net >= 0 ? 'text-emerald-600' : 'text-red-600'}">${fmt(net)}</td></tr>`; }), ['l', 'r', 'r', 'r', 'r'])}</div>`;
+            insChart = new Chart(document.getElementById('insTrendChart'), { data: { labels: months, datasets: [{ type: 'bar', label: 'Credit Issued', data: months.map(m => cr[m]), backgroundColor: '#6366f1', borderRadius: 4 }, { type: 'bar', label: 'Collected', data: months.map(m => col[m]), backgroundColor: '#10b981', borderRadius: 4 }, { type: 'line', label: 'Expenses', data: months.map(m => ex[m]), borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 }] }, options: { responsive: true, animation: { duration: 0 }, scales: { y: { beginAtZero: true } } } });
+        }
+        // ---- Promises ----
+        function insPromises(body) {
+            const all = Object.values(extrasCache.promises); const open = all.filter(p => p.status === 'open').sort((a, b) => a.date.localeCompare(b.date)); const done = all.filter(p => p.status !== 'open').sort((a, b) => b.date.localeCompare(a.date)).slice(0, 25);
+            const kept = all.filter(p => p.status === 'kept').length, broken = all.filter(p => p.status === 'broken').length;
+            body.innerHTML = `<div class="glass rounded-3xl p-4"><div class="flex flex-wrap justify-between items-center mb-3 gap-2"><h3 class="font-bold text-sm"><i class="fas fa-handshake text-orange-500"></i> Open Promises (${open.length})</h3><span class="text-xs text-gray-500">Kept: <b class="text-green-600">${kept}</b> • Broken: <b class="text-red-500">${broken}</b>${kept + broken ? ` • Reliability ${Math.round(kept / (kept + broken) * 100)}%` : ''}</span></div><div class="space-y-1.5">${open.map(p => promiseRowHTML(p, true)).join('') || '<p class="text-xs text-gray-400 italic">No open promises. Add them from a shop profile (🏪).</p>'}</div>${done.length ? `<h4 class="font-bold text-xs text-gray-500 mt-5 mb-2">Recently closed</h4><div class="space-y-1.5">${done.map(p => promiseRowHTML(p, true)).join('')}</div>` : ''}</div>`;
+        }
+        // ---- Day Close ----
+        function dayCloseData(date) {
+            const issued = { n: 0, amt: 0, routes: {} }, pay = { cash: 0, chq: 0, n: 0, routes: {} }; const chqList = [];
+            (dbCache || []).forEach(b => { if (b.date === date) { issued.n++; issued.amt += num(b.credit); issued.routes[b.street] = (issued.routes[b.street] || 0) + num(b.credit); } (b.installments || []).forEach(i => { if (i.date !== date || i.returned) return; const a = num(i.amt); pay.n++; if (isChequeIns(i)) { pay.chq += a; chqList.push({ o: b.outlet, a, bank: parseChequeDetails(i.by, i.bankName).bankName, no: parseChequeDetails(i.by, i.bankName).chqNo }); } else pay.cash += a; pay.routes[b.street] = (pay.routes[b.street] || 0) + a; }); });
+            const exps = (expCache || []).filter(e => e.date === date); const expTot = exps.reduce((s, e) => s + num(e.amt), 0);
+            return { issued, pay, chqList, exps, expTot, netCash: pay.cash - expTot };
+        }
+        function insDayClose(body) {
+            if (!insDayDate) insDayDate = localToday(); const d = dayCloseData(insDayDate);
+            const rowsR = Object.keys(Object.assign({}, d.issued.routes, d.pay.routes)).map(r => `<tr><td class="p-2 md:p-3 font-bold">${escH(r)}</td><td class="p-2 md:p-3 text-right">${fmt(d.issued.routes[r] || 0)}</td><td class="p-2 md:p-3 text-right text-green-600">${fmt(d.pay.routes[r] || 0)}</td></tr>`);
+            body.innerHTML = `<div class="glass rounded-3xl p-4"><div class="flex flex-wrap items-center justify-between gap-2 mb-4"><h3 class="font-bold"><i class="fas fa-clipboard-check text-theme"></i> Day-End Closing Report</h3><div class="flex gap-2 items-center"><input type="date" value="${insDayDate}" onchange="insDayDate=this.value;renderInsights()" class="p-2 border rounded-xl text-sm"><button onclick="printDayClose()" class="bg-gray-800 text-white px-3 py-2 rounded-xl text-sm font-bold"><i class="fas fa-print"></i></button><button onclick="shareDayClose()" class="bg-green-500 text-white px-3 py-2 rounded-xl text-sm font-bold"><i class="fab fa-whatsapp"></i> Share</button></div></div>
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">${[['Credit Issued', d.issued.amt, 'text-indigo-600', d.issued.n + ' bills'], ['Cash Collected', d.pay.cash, 'text-green-600', ''], ['Cheques Received', d.pay.chq, 'text-blue-600', d.chqList.length + ' cheques'], ['Expenses', d.expTot, 'text-red-500', d.exps.length + ' items'], ['Net Cash in Hand', d.netCash, d.netCash >= 0 ? 'text-emerald-600' : 'text-red-600', 'cash − expenses']].map(c => `<div class="subpanel rounded-2xl p-3"><p class="text-[10px] font-bold text-gray-400 uppercase">${c[0]}</p><p class="text-lg font-extrabold ${c[2]}">Rs. ${fmt(c[1])}</p><p class="text-[10px] text-gray-400">${c[3]}</p></div>`).join('')}</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><h4 class="font-bold text-xs text-gray-500 mb-1">By Route</h4>${insTable(['Route', 'Issued', 'Collected'], rowsR, ['l', 'r', 'r'])}</div><div><h4 class="font-bold text-xs text-gray-500 mb-1">Expenses</h4>${insTable(['Description', 'Category', 'Amount'], d.exps.map(e => `<tr><td class="p-2 md:p-3">${escH(e.desc || '')}</td><td class="p-2 md:p-3">${escH(e.cat || '')}</td><td class="p-2 md:p-3 text-right text-red-500">${fmt(e.amt)}</td></tr>`), ['l', 'l', 'r'])}</div></div></div>`;
+        }
+        function dayCloseText() {
+            const d = dayCloseData(insDayDate || localToday()); const set = getSettings();
+            return `*${set.name} - Day Close ${insDayDate || localToday()}*\nනිකුත් කළ ණය: Rs. ${fmt(d.issued.amt)} (${d.issued.n} bills)\nමුදල් ලැබීම: Rs. ${fmt(d.pay.cash)}\nචෙක්පත්: Rs. ${fmt(d.pay.chq)} (${d.chqList.length})\nවියදම්: Rs. ${fmt(d.expTot)}\n*අතේ ඇති මුදල (Net Cash): Rs. ${fmt(d.netCash)}*`;
+        }
+        function shareDayClose() { window.open(`https://wa.me/?text=${encodeURIComponent(dayCloseText())}`, '_blank'); }
+        function printDayClose() { const d = dayCloseData(insDayDate || localToday()); const set = getSettings();
+            printHTML('Day Close', `<h2>${escH(set.name)} - Day Close Report</h2><p>${insDayDate || localToday()}</p><table><tr><th>Credit Issued</th><td>Rs. ${fmt(d.issued.amt)} (${d.issued.n} bills)</td></tr><tr><th>Cash Collected</th><td>Rs. ${fmt(d.pay.cash)}</td></tr><tr><th>Cheques Received</th><td>Rs. ${fmt(d.pay.chq)} (${d.chqList.length})</td></tr><tr><th>Expenses</th><td>Rs. ${fmt(d.expTot)}</td></tr><tr><th>Net Cash in Hand</th><td><b>Rs. ${fmt(d.netCash)}</b></td></tr></table>${d.chqList.length ? '<h3>Cheques</h3><table><tr><th>Shop</th><th>Bank</th><th>No</th><th>Amount</th></tr>' + d.chqList.map(c => `<tr><td>${escH(c.o)}</td><td>${escH(c.bank)}</td><td>${escH(c.no)}</td><td align="right">${fmt(c.a)}</td></tr>`).join('') + '</table>' : ''}${d.exps.length ? '<h3>Expenses</h3><table><tr><th>Description</th><th>Category</th><th>Amount</th></tr>' + d.exps.map(e => `<tr><td>${escH(e.desc)}</td><td>${escH(e.cat)}</td><td align="right">${fmt(e.amt)}</td></tr>`).join('') + '</table>' : ''}<p style="margin-top:40px">Prepared by: ____________ &nbsp;&nbsp;&nbsp; Checked by: ____________</p>`); }
+        // ---- Cash counter ----
+        const DENOMS = [5000, 2000, 1000, 500, 100, 50, 20, 10, 5, 2, 1];
+        function cashTotal() { return DENOMS.reduce((s, d) => s + d * num(cashCounts[d]), 0); }
+        function insCash(body) {
+            const d = dayCloseData(localToday()); const expected = d.pay.cash - d.expTot + num(cashOpening);
+            body.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-3"><i class="fas fa-coins text-yellow-500"></i> Cash Denomination Counter</h3><div class="grid grid-cols-2 gap-2">${DENOMS.map(x => `<div class="flex items-center gap-2 subpanel rounded-xl p-2"><span class="w-16 text-right font-extrabold text-sm">${x >= 20 ? 'Rs.' + x : x + ' c'}</span><span class="text-gray-400">×</span><input type="number" min="0" value="${cashCounts[x] || ''}" placeholder="0" oninput="cashCounts[${x}]=this.value;cashRecalc()" class="w-full p-1.5 border rounded-lg text-sm text-center font-bold"><span id="cash_sub_${x}" class="w-24 text-right text-xs text-gray-500">${cashCounts[x] ? fmt(x * num(cashCounts[x])) : ''}</span></div>`).join('')}</div><button onclick="cashCounts={};cashOpening=0;renderInsights()" class="mt-3 text-xs text-red-500 hover:underline"><i class="fas fa-eraser"></i> Reset</button></div>
+              <div class="glass rounded-3xl p-4"><h3 class="font-bold text-sm mb-3">Reconciliation (today)</h3><div class="space-y-2 text-sm"><div class="flex justify-between"><span>Cash collected today</span><b class="text-green-600">Rs. ${fmt(d.pay.cash)}</b></div><div class="flex justify-between"><span>Expenses today</span><b class="text-red-500">− Rs. ${fmt(d.expTot)}</b></div><div class="flex justify-between items-center"><span>Opening cash (optional)</span><input type="number" value="${cashOpening || ''}" oninput="cashOpening=this.value;cashRecalc()" class="p-1.5 border rounded-lg w-32 text-right text-sm"></div><hr><div class="flex justify-between text-base"><span class="font-bold">Expected cash in hand</span><b id="cashExpected">Rs. ${fmt(expected)}</b></div><div class="flex justify-between text-base"><span class="font-bold">Counted cash</span><b id="cashCounted" class="text-theme">Rs. ${fmt(cashTotal())}</b></div><div id="cashDiff" class="text-center p-3 rounded-xl font-extrabold text-lg"></div></div></div></div>`;
+            cashRecalc();
+        }
+        function cashRecalc() {
+            DENOMS.forEach(x => { const el = document.getElementById('cash_sub_' + x); if (el) el.innerText = cashCounts[x] ? fmt(x * num(cashCounts[x])) : ''; });
+            const d = dayCloseData(localToday()); const expected = d.pay.cash - d.expTot + num(cashOpening); const counted = cashTotal(); const diff = counted - expected;
+            const e1 = document.getElementById('cashExpected'); if (e1) e1.innerText = 'Rs. ' + fmt(expected); const e2 = document.getElementById('cashCounted'); if (e2) e2.innerText = 'Rs. ' + fmt(counted);
+            const el = document.getElementById('cashDiff'); if (!el) return; const ok = Math.abs(diff) < 0.5;
+            el.className = 'text-center p-3 rounded-xl font-extrabold text-lg ' + (ok ? 'bg-green-100 text-green-700' : diff < 0 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
+            el.innerText = ok ? '✔ Balanced' : (diff < 0 ? 'Short: Rs. ' : 'Excess: Rs. ') + fmt(Math.abs(diff));
+        }
+        // ---- Collection sheet ----
+        const sheetKey = () => 'geethara_sheet_' + localToday() + '_' + insSheetRoute;
+        function insSheet(body) {
+            if (!insSheetRoute) insSheetRoute = (activeStreet !== 'All' && streets.includes(activeStreet)) ? activeStreet : (streets[0] || '');
+            let visited = []; try { visited = JSON.parse(localStorage.getItem(sheetKey()) || '[]'); } catch (e) {}
+            const today = localToday(); const m = new Map();
+            (dbCache || []).forEach(b => { if (b.street !== insSheetRoute) return; const bal = num(b.credit) - num(b.collected); if (bal <= 0.009) return; const k = normName(b.outlet); const o = m.get(k) || { name: k, bal: 0, n: 0, oldest: 0, bills: [] }; o.bal += bal; o.n++; o.oldest = Math.max(o.oldest, daysBetween(b.date, today)); o.bills.push(`${b.billNo || '-'}`); m.set(k, o); });
+            let list = [...m.values()]; list.sort((a, b) => insSheetSort === 'bal' ? b.bal - a.bal : insSheetSort === 'name' ? a.name.localeCompare(b.name) : b.oldest - a.oldest);
+            const tot = list.reduce((s, o) => s + o.bal, 0);
+            body.innerHTML = `<div class="glass rounded-3xl p-4"><div class="flex flex-wrap items-center justify-between gap-2 mb-3"><h3 class="font-bold"><i class="fas fa-route text-theme"></i> Collection Sheet</h3><div class="flex flex-wrap gap-2"><select onchange="insSheetRoute=this.value;renderInsights()" class="p-2 border rounded-xl text-sm">${streets.map(s => `<option ${s === insSheetRoute ? 'selected' : ''}>${escH(s)}</option>`).join('')}</select><select onchange="insSheetSort=this.value;renderInsights()" class="p-2 border rounded-xl text-sm"><option value="age" ${insSheetSort === 'age' ? 'selected' : ''}>Oldest first</option><option value="bal" ${insSheetSort === 'bal' ? 'selected' : ''}>Highest balance</option><option value="name" ${insSheetSort === 'name' ? 'selected' : ''}>Name A-Z</option></select><button onclick="printCollectionSheet()" class="bg-gray-800 text-white px-3 py-2 rounded-xl text-sm font-bold"><i class="fas fa-print"></i> Print</button></div></div>
+              <p class="text-xs text-gray-500 mb-2">${list.length} shops • Total due <b class="text-red-500">Rs. ${fmt(tot)}</b> • Visited ${list.filter(o => visited.includes(o.name)).length}/${list.length}</p>
+              ${insTable(['✔', 'Shop', 'Bills', 'Due (Rs.)', 'Oldest', 'Phone', ''], list.map((o, i) => { const ph = getShopExtra(o.name).phone || ''; return `<tr class="${visited.includes(o.name) ? 'opacity-50' : ''}"><td class="p-2 md:p-3"><input type="checkbox" class="w-4 h-4" ${visited.includes(o.name) ? 'checked' : ''} data-n="${escH(o.name)}" onchange="sheetVisit(this.dataset.n,this.checked)"></td><td class="p-2 md:p-3">${shopLink(o.name)}</td><td class="p-2 md:p-3 text-center">${o.n}</td><td class="p-2 md:p-3 text-right font-extrabold text-red-500">${fmt(o.bal)}</td><td class="p-2 md:p-3 text-center ${o.oldest > 30 ? 'text-red-500 font-bold' : ''}">${o.oldest}d</td><td class="p-2 md:p-3 text-xs">${ph ? `<a href="tel:${escH(ph)}" class="text-theme">${escH(ph)}</a>` : '-'}</td><td class="p-2 md:p-3 text-center"><button data-n="${escH(o.name)}" onclick="sendShopReminder(this.dataset.n)" class="w-7 h-7 rounded bg-green-50 text-green-600"><i class="fab fa-whatsapp"></i></button></td></tr>`; }), ['c', 'l', 'c', 'r', 'c', 'l', 'c'])}</div>`;
+        }
+        function sheetVisit(n, on) { let v = []; try { v = JSON.parse(localStorage.getItem(sheetKey()) || '[]'); } catch (e) {} v = v.filter(x => x !== n); if (on) v.push(n); try { localStorage.setItem(sheetKey(), JSON.stringify(v)); } catch (e) {} renderInsights(); }
+        function printCollectionSheet() {
+            const today = localToday(); const m = new Map();
+            (dbCache || []).forEach(b => { if (b.street !== insSheetRoute) return; const bal = num(b.credit) - num(b.collected); if (bal <= 0.009) return; const k = normName(b.outlet); const o = m.get(k) || { name: k, bal: 0, bills: [], oldest: 0 }; o.bal += bal; o.oldest = Math.max(o.oldest, daysBetween(b.date, today)); o.bills.push(`${b.billNo || '-'}: ${fmt(bal)}`); m.set(k, o); });
+            let list = [...m.values()]; list.sort((a, b) => insSheetSort === 'bal' ? b.bal - a.bal : insSheetSort === 'name' ? a.name.localeCompare(b.name) : b.oldest - a.oldest);
+            printHTML('Collection Sheet', `<h2>${escH(getSettings().name)} - Collection Sheet</h2><p><b>Route:</b> ${escH(insSheetRoute)} &nbsp; <b>Date:</b> ${today} &nbsp; <b>Total due:</b> Rs. ${fmt(list.reduce((s, o) => s + o.bal, 0))}</p><table><tr><th>#</th><th>Shop</th><th>Bills (balance)</th><th>Due</th><th>Age</th><th>Cash</th><th>Cheque</th><th>Sign</th></tr>${list.map((o, i) => `<tr><td>${i + 1}</td><td><b>${escH(o.name)}</b></td><td style="font-size:10px">${escH(o.bills.join(', '))}</td><td align="right"><b>${fmt(o.bal)}</b></td><td align="center">${o.oldest}d</td><td style="width:70px"></td><td style="width:70px"></td><td style="width:60px"></td></tr>`).join('')}</table>`);
+        }
+        // ---- Data Health ----
+        function scanIntegrity() {
+            const issues = { mismatch: [], over: [], badDate: [], dupId: [], dupBill: [], badName: [], badCredit: [], insBefore: [], orphanRoute: [] };
+            const seen = new Set(); const billMap = {};
+            (dbCache || []).forEach(b => {
+                const sum = (b.installments || []).reduce((s, i) => s + num(i.amt), 0);
+                if (Math.abs(sum - num(b.collected)) > 0.01) issues.mismatch.push(b.id);
+                if (num(b.collected) > num(b.credit) + 0.01) issues.over.push(b.id);
+                if (!parseD(b.date)) issues.badDate.push(b.id);
+                if (seen.has(b.id)) issues.dupId.push(b.id); seen.add(b.id);
+                if (b.billNo) { const k = normName(b.outlet) + '|' + String(b.billNo).toUpperCase(); billMap[k] = (billMap[k] || 0) + 1; if (billMap[k] === 2) issues.dupBill.push(b.id); }
+                if (normName(b.outlet) !== b.outlet) issues.badName.push(b.id);
+                if (!(num(b.credit) > 0)) issues.badCredit.push(b.id);
+                if ((b.installments || []).some(i => i.date && b.date && i.date < b.date)) issues.insBefore.push(b.id);
+                if (b.street && streets.length && !streets.includes(b.street)) issues.orphanRoute.push(b.id);
+            });
+            issues.total = Object.values(issues).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0); return issues;
+        }
+        function fixIntegrity(kind) {
+            const db = getDB(); let c = 0; const seen = new Set();
+            db.forEach(b => {
+                if (kind === 'mismatch') { const sum = (b.installments || []).reduce((s, i) => s + num(i.amt), 0); if (Math.abs(sum - num(b.collected)) > 0.01) { b.collected = sum; c++; } }
+                if (kind === 'dupId') { if (seen.has(b.id)) { b.id = Date.now().toString() + Math.random().toString(36).substr(2, 6); c++; } seen.add(b.id); }
+                if (kind === 'badName') { const n = normName(b.outlet); if (n !== b.outlet) { b.outlet = n; c++; } }
+            });
+            if (!c) return Toast.fire({ icon: 'info', title: 'Nothing to fix' });
+            saveDB(db, `Data Health auto-fix (${kind}): ${c} bill(s)`); setTimeout(() => { renderInsights(); renderTables(); renderDashboard(); }, 200); Toast.fire({ icon: 'success', title: `${c} records fixed` });
+        }
+        function showIssueBills(kind) {
+            const ids = new Set(scanIntegrity()[kind]); const rows = (dbCache || []).filter(b => ids.has(b.id)).slice(0, 40);
+            Swal.fire({ title: 'Affected bills', width: 700, html: `<div class="max-h-80 overflow-y-auto text-left text-xs">${rows.map(b => `<div class="border-b py-1.5 flex justify-between gap-2"><span><b>${escH(b.outlet)}</b> • ${escH(b.date)} • ${escH(b.billNo || '-')} • Rs. ${fmt(b.credit)} (paid ${fmt(b.collected)})</span><button onclick="Swal.close();openEditModal('${b.id}')" class="text-yellow-600 font-bold"><i class="fas fa-pen"></i> Edit</button></div>`).join('') || 'None'}${ids.size > 40 ? '<p class="text-gray-400 mt-2">...first 40 shown</p>' : ''}</div>`, showConfirmButton: false, showCloseButton: true });
+        }
+        function insHealth(body) {
+            const sc = scanIntegrity(); const ba = backupAgeDays();
+            const defs = [['mismatch', 'Collected ≠ sum of installments', true], ['over', 'Collected is more than credit (overpaid)', false], ['badDate', 'Missing / invalid bill date', false], ['dupId', 'Duplicate internal IDs', true], ['dupBill', 'Same bill no. repeated for one shop', false], ['badName', 'Shop names with extra spaces / lowercase', true], ['badCredit', 'Credit amount zero or invalid', false], ['insBefore', 'Payment dated before bill date', false], ['orphanRoute', 'Bills on a route that no longer exists', false]];
+            body.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4"><div class="glass rounded-3xl p-4 lg:col-span-2"><h3 class="font-bold text-sm mb-3"><i class="fas fa-heartbeat text-red-500"></i> Data Integrity Check <span class="text-xs font-normal text-gray-400">(${(dbCache || []).length} bills scanned)</span></h3>${defs.map(([k, label, fix]) => `<div class="flex items-center gap-2 py-2 border-b dark:border-slate-700 text-sm"><span class="w-6 text-center">${sc[k].length ? '⚠️' : '✅'}</span><span class="flex-1">${label}</span><b class="${sc[k].length ? 'text-red-500' : 'text-green-600'}">${sc[k].length}</b>${sc[k].length ? `<button onclick="showIssueBills('${k}')" class="text-xs text-theme font-bold hover:underline">View</button>` : ''}${fix && sc[k].length ? `<button onclick="fixIntegrity('${k}')" class="text-xs bg-green-500 text-white px-2.5 py-1 rounded-lg font-bold">Auto-fix</button>` : ''}</div>`).join('')}</div>
+              <div class="glass rounded-3xl p-4 space-y-3"><h3 class="font-bold text-sm"><i class="fas fa-save text-purple-500"></i> Backup Status</h3><p class="text-sm ${ba === null || ba >= 7 ? 'text-red-500' : 'text-green-600'} font-bold">${ba === null ? 'No backup taken from this device yet' : ba === 0 ? 'Backup taken today ✔' : `Last backup ${ba} day(s) ago`}</p><button onclick="backupDB();setTimeout(renderInsights,300)" class="w-full bg-purple-500 text-white font-bold py-2 rounded-xl text-sm"><i class="fas fa-download"></i> Backup Now</button><p class="text-[11px] text-gray-400">A reminder appears in 🔔 alerts when the last backup is 7+ days old.</p></div></div>`;
+        }
+        // ---- print helper (hidden iframe, no pop-up blockers) ----
+        function printHTML(title, inner) {
+            const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; document.body.appendChild(f);
+            const d = f.contentWindow.document; d.open(); d.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escH(title)}</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:18px}h2{margin:0 0 4px}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #bbb;padding:5px 6px;text-align:left}th{background:#f1f5f9}</style></head><body>${inner}</body></html>`); d.close();
+            setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { console.error(e); } setTimeout(() => f.remove(), 2000); }, 300);
+        }
+
+        // =====================================================================
+        // COMMAND PALETTE (Ctrl+K)
+        // =====================================================================
+        let cmdList = [], cmdSel = 0;
+        function buildCommands(q) {
+            const admin = role === 'Admin'; const c = [];
+            const P = (id, label, icon, adminOnly) => { if (!adminOnly || admin) c.push({ label: 'Go to ' + label, icon, run: () => nav(id) }); };
+            P('dashboard', 'Dashboard', 'fa-chart-pie', true); P('addBills', 'Add Bills', 'fa-plus-circle'); P('collections', 'Collections', 'fa-hand-holding-usd'); P('cheques', 'Cheques', 'fa-money-check-alt'); P('masterData', 'Master Data', 'fa-database'); P('expenses', 'Expenses', 'fa-wallet'); P('routesManage', 'Manage Routes', 'fa-map-marked-alt', true); P('shopNames', 'Shop Names Editor', 'fa-spell-check', true); P('audit', 'Audit Trail', 'fa-history', true);
+            INS_TABS.filter(t => admin || !t.admin).forEach(t => c.push({ label: 'Insights: ' + t.label, icon: t.icon, run: () => openInsights(t.id) }));
+            c.push({ label: 'Smart Alerts', icon: 'fa-bell', run: openAlerts }, { label: 'Toggle Dark Mode', icon: 'fa-moon', run: toggleTheme }, { label: 'Lock App now', icon: 'fa-lock', run: lockApp }, { label: 'Set / change lock PIN', icon: 'fa-key', run: setLockPin }, { label: 'Voice typing language (English ⇄ සිංහල)', icon: 'fa-microphone', run: toggleVoiceLang }, { label: 'Keyboard shortcuts', icon: 'fa-keyboard', run: showShortcuts }, { label: 'Settings & Health', icon: 'fa-cog', run: openSettings });
+            if (admin) c.push({ label: 'Backup system now', icon: 'fa-save', run: backupDB });
+            const ql = q.trim().toLowerCase(); let res = ql ? c.filter(x => x.label.toLowerCase().includes(ql)) : c.slice(0, 9);
+            if (ql.length >= 2) {
+                const u = ql.toUpperCase(); const shops = [...getShopIndex().map.values()].filter(s => s.name.includes(u)).sort((a, b) => b.balance - a.balance).slice(0, 8);
+                shops.forEach(s => res.push({ label: `🏪 ${s.name}  —  Rs. ${fmt(s.balance)}`, icon: 'fa-store', run: () => openShop360(s.name) }));
+                if (ql.length >= 3) (dbCache || []).filter(b => b.billNo && String(b.billNo).toLowerCase().includes(ql)).slice(0, 5).forEach(b => res.push({ label: `🧾 ${b.billNo} • ${b.outlet} • Rs. ${fmt(b.credit)}`, icon: 'fa-file-invoice', run: () => viewInvoice(b.id) }));
+            }
+            return res;
+        }
+        function openCmdPalette() {
+            if (document.getElementById('cmdPalette') || !role) return;
+            const ov = document.createElement('div'); ov.id = 'cmdPalette'; ov.className = 'fixed inset-0 z-[150] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center pt-[10vh] px-3';
+            ov.innerHTML = `<div class="panel w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden"><div class="p-3 border-b flex items-center gap-2"><i class="fas fa-search text-gray-400"></i><input id="cmdInput" autocomplete="off" placeholder="Search shops, bill no, pages, actions..." class="flex-1 outline-none bg-transparent text-sm md:text-base"><kbd class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">Esc</kbd></div><div id="cmdList" class="max-h-[55vh] overflow-y-auto"></div></div>`;
+            ov.addEventListener('click', e => { if (e.target === ov) closeCmdPalette(); }); document.body.appendChild(ov);
+            const inp = document.getElementById('cmdInput'); inp.focus(); cmdSel = 0; renderCmdList('');
+            inp.addEventListener('input', () => { cmdSel = 0; renderCmdList(inp.value); });
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); cmdSel = Math.min(cmdList.length - 1, cmdSel + 1); renderCmdList(inp.value, true); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); cmdSel = Math.max(0, cmdSel - 1); renderCmdList(inp.value, true); }
+                else if (e.key === 'Enter') { e.preventDefault(); runCmd(cmdSel); } else if (e.key === 'Escape') closeCmdPalette();
+            });
+        }
+        function closeCmdPalette() { const o = document.getElementById('cmdPalette'); if (o) o.remove(); }
+        function renderCmdList(q, keep) {
+            if (!keep) cmdList = buildCommands(q);
+            document.getElementById('cmdList').innerHTML = cmdList.length ? cmdList.map((x, i) => `<div onclick="runCmd(${i})" onmouseenter="cmdSel=${i};renderCmdList(document.getElementById('cmdInput').value,true)" class="cmd-item px-4 py-2.5 flex items-center gap-3 cursor-pointer text-sm ${i === cmdSel ? 'cmd-active' : ''}"><i class="fas ${x.icon} w-5 text-center text-theme"></i><span>${escH(x.label)}</span></div>`).join('') : '<p class="p-5 text-center text-gray-400 text-sm">No results</p>';
+            const act = document.querySelector('#cmdList .cmd-active'); if (act && keep) act.scrollIntoView({ block: 'nearest' });
+        }
+        function runCmd(i) { const x = cmdList[i]; closeCmdPalette(); if (x) setTimeout(x.run, 30); }
+
+        // =====================================================================
+        // REAL VOICE TYPING (Web Speech API)
+        // =====================================================================
+        let _recog = null;
+        const getVoiceLang = () => { try { return localStorage.getItem('geethara_voice_lang') || 'en-US'; } catch (e) { return 'en-US'; } };
+        function toggleVoiceLang() { const n = getVoiceLang() === 'en-US' ? 'si-LK' : 'en-US'; try { localStorage.setItem('geethara_voice_lang', n); } catch (e) {} Toast.fire({ icon: 'success', title: n === 'si-LK' ? 'Voice: සිංහල' : 'Voice: English' }); }
+        function startVoice(id, cb) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) return Swal.fire('Not supported', 'Voice typing needs Google Chrome / Edge (or Chrome on Android).', 'info');
+            if (_recog) { try { _recog.stop(); } catch (e) {} _recog = null; return; }
+            const el = document.getElementById(id); if (!el) return;
+            const icons = [...document.querySelectorAll('.fa-microphone')].filter(i => (i.getAttribute('onclick') || '').includes(`'${id}'`));
+            const setOn = on => icons.forEach(i => i.classList.toggle('mic-on', on));
+            const r = new SR(); _recog = r; r.lang = getVoiceLang(); r.interimResults = false; r.maxAlternatives = 1;
+            r.onstart = () => { setOn(true); showAIHelper(r.lang === 'si-LK' ? 'සවන් දෙමින්... කතා කරන්න' : 'Listening... speak now'); };
+            r.onresult = ev => {
+                let t = ev.results[0][0].transcript.trim();
+                if (el.classList.contains('uppercase') || id === 'p_addOutlet') t = t.toUpperCase();
+                el.value = (id === 'p_addRemarks' && el.value ? el.value + ' ' : '') + t;
+                el.dispatchEvent(new Event('input', { bubbles: true })); if (cb) try { cb(); } catch (e) {}
+            };
+            r.onerror = e => { if (e.error !== 'aborted' && e.error !== 'no-speech') Toast.fire({ icon: 'error', title: 'Voice error: ' + e.error }); };
+            r.onend = () => { setOn(false); _recog = null; };
+            try { r.start(); } catch (e) { _recog = null; }
+        }
+
+        // =====================================================================
+        // APP LOCK (PIN) + IDLE AUTO-LOCK  (PIN is stored on this device only)
+        // =====================================================================
+        const LOCK_PIN_KEY = 'geethara_lock_pin', LOCK_MIN_KEY = 'geethara_lock_min';
+        let lastActivity = Date.now(), appLocked = false, lockTimerOn = false;
+        async function hashPin(p) { try { const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('geethara|' + p)); return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''); } catch (e) { let h = 0; const s = 'geethara|' + p; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return 'f' + h; } }
+        const hasLockPin = () => { try { return !!localStorage.getItem(LOCK_PIN_KEY); } catch (e) { return false; } };
+        const lockMinutes = () => { try { return parseInt(localStorage.getItem(LOCK_MIN_KEY) || '5', 10); } catch (e) { return 5; } };
+        async function setLockPin() {
+            const r = await Swal.fire({ title: 'App Lock PIN', html: `<input id="lp1" type="password" inputmode="numeric" maxlength="8" class="swal2-input" placeholder="New PIN (4-8 digits)"><input id="lp2" type="password" inputmode="numeric" maxlength="8" class="swal2-input" placeholder="Repeat PIN"><label class="text-xs text-gray-500">Auto-lock after (minutes, 0 = off)</label><input id="lp3" type="number" min="0" max="120" class="swal2-input" value="${lockMinutes()}">${hasLockPin() ? '<p class="text-xs text-red-500 mt-2">Leave PIN blank and press "Remove PIN" to disable.</p>' : ''}`, showCancelButton: true, showDenyButton: hasLockPin(), denyButtonText: 'Remove PIN', confirmButtonText: 'Save',
+                preConfirm: () => { const a = document.getElementById('lp1').value, b = document.getElementById('lp2').value; if (!/^\d{4,8}$/.test(a)) { Swal.showValidationMessage('PIN must be 4-8 digits'); return false; } if (a !== b) { Swal.showValidationMessage('PINs do not match'); return false; } return { pin: a, min: parseInt(document.getElementById('lp3').value || '5', 10) }; } });
+            if (r.isDenied) { try { localStorage.removeItem(LOCK_PIN_KEY); } catch (e) {} return Toast.fire({ icon: 'info', title: 'PIN removed' }); }
+            if (!r.isConfirmed) return; try { localStorage.setItem(LOCK_PIN_KEY, await hashPin(r.value.pin)); localStorage.setItem(LOCK_MIN_KEY, String(r.value.min)); } catch (e) {}
+            Toast.fire({ icon: 'success', title: 'PIN saved' });
+        }
+        function lockApp() {
+            if (!role) return; if (!hasLockPin()) { Swal.fire({ icon: 'info', title: 'Set a PIN first', text: 'Create a PIN to use App Lock.', confirmButtonText: 'Set PIN' }).then(r => { if (r.isConfirmed) setLockPin(); }); return; }
+            appLocked = true; const s = document.getElementById('lockScreen'); s.classList.remove('hidden'); const i = document.getElementById('lockPinInput'); i.value = ''; setTimeout(() => i.focus(), 50); document.getElementById('lockMsg').innerText = '';
+        }
+        async function tryUnlock() {
+            const i = document.getElementById('lockPinInput'); const h = await hashPin(i.value); let stored = ''; try { stored = localStorage.getItem(LOCK_PIN_KEY) || ''; } catch (e) {}
+            if (h === stored) { appLocked = false; lastActivity = Date.now(); document.getElementById('lockScreen').classList.add('hidden'); i.value = ''; }
+            else { document.getElementById('lockMsg').innerText = 'වැරදි PIN අංකයකි'; i.value = ''; i.focus(); }
+        }
+        function lockForgot() { Swal.fire({ title: 'PIN අමතකද?', text: 'Sign out වී Google ගිණුමෙන් නැවත ඇතුළු වන්න. PIN එක ඉවත් කරනු ලැබේ.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sign out & reset PIN' }).then(r => { if (r.isConfirmed) { try { localStorage.removeItem(LOCK_PIN_KEY); } catch (e) {} appLocked = false; document.getElementById('lockScreen').classList.add('hidden'); auth.signOut(); } }); }
+        function startIdleLock() {
+            if (lockTimerOn) return; lockTimerOn = true;
+            ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(ev => window.addEventListener(ev, () => { if (!appLocked) lastActivity = Date.now(); }, { passive: true }));
+            setInterval(() => { const m = lockMinutes(); if (role && !appLocked && hasLockPin() && m > 0 && Date.now() - lastActivity > m * 60000) lockApp(); }, 15000);
+        }
+
+        // =====================================================================
+        // SETTINGS & HEALTH (header profile button)
+        // =====================================================================
+        function openSettings() {
+            const set = getSettings(); const admin = role === 'Admin'; const ba = backupAgeDays();
+            let kb = 0; try { kb = Math.round(new Blob([JSON.stringify(dbCache)]).size / 1024); } catch (e) {}
+            Swal.fire({ title: '⚙️ Settings & Health', width: 560, showCancelButton: true, confirmButtonText: 'Save', html: `<div class="text-left space-y-3 text-sm">
+                <div class="grid grid-cols-3 gap-2 text-center"><div class="subpanel rounded-xl p-2"><p class="text-[10px] text-gray-400">BILLS</p><b>${(dbCache || []).length}</b></div><div class="subpanel rounded-xl p-2"><p class="text-[10px] text-gray-400">SHOPS</p><b>${getShopIndex().map.size}</b></div><div class="subpanel rounded-xl p-2"><p class="text-[10px] text-gray-400">DATA SIZE</p><b>${kb} KB</b></div></div>
+                <p class="text-xs">${navigator.onLine ? '🟢 Online' : '🔴 Offline'} • Signed in as <b>${escH(currentUserEmail || '')}</b> (${escH(role || '')}) • Backup: <b class="${ba === null || ba >= 7 ? 'text-red-500' : 'text-green-600'}">${ba === null ? 'never' : ba + 'd ago'}</b></p>
+                ${admin ? `<div><label class="text-xs font-bold text-gray-500">Company Name</label><input id="st_name" class="w-full p-2 border rounded-lg" value="${escH(set.name)}"></div><div class="flex gap-3"><div class="flex-1"><label class="text-xs font-bold text-gray-500">Theme Colour</label><input id="st_color" type="color" class="w-full h-10 border rounded-lg" value="${escH(set.color || '#3b82f6')}"></div><div class="flex-1"><label class="text-xs font-bold text-gray-500">Daily Collection Target (Rs.)</label><input id="st_target" type="number" class="w-full p-2 border rounded-lg" value="${getDailyTarget() || ''}"></div></div>` : ''}
+                <div class="flex flex-wrap gap-2"><button type="button" onclick="Swal.close();setLockPin()" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-bold"><i class="fas fa-key"></i> App Lock PIN</button><button type="button" onclick="toggleVoiceLang()" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-bold"><i class="fas fa-microphone"></i> Voice: ${getVoiceLang() === 'si-LK' ? 'සිංහල' : 'English'} (toggle)</button><button type="button" onclick="Swal.close();openInsights('health')" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-bold"><i class="fas fa-heartbeat"></i> Data Health</button></div></div>`,
+                preConfirm: () => admin ? { name: document.getElementById('st_name').value.trim(), color: document.getElementById('st_color').value, target: num(document.getElementById('st_target').value) } : {} }).then(r => {
+                if (!r.isConfirmed || !admin) return; const v = r.value;
+                if (v.name || v.color) { settingsCache = Object.assign({}, settingsCache, { name: v.name || settingsCache.name, color: v.color || settingsCache.color }); REF_SETTINGS().set({ data: settingsCache }).catch(e => handleSyncError(e)); applySettings(); }
+                setExtraSetting('dailyTarget', v.target || 0); renderDashboardExtras(); Toast.fire({ icon: 'success', title: 'Settings saved' });
+            });
+        }
+        function showShortcuts() { const k = t => `<kbd class="bg-gray-200 text-gray-700 px-2 py-1 rounded">${t}</kbd>`; Swal.fire({ title: '⌨️ Keyboard Shortcuts', html: `<div class="text-left space-y-2 text-sm"><p>${k('Ctrl')} + ${k('K')} : Command Palette (search anything)</p><p>${k('Ctrl')} + ${k('S')} : Save Pending Bills/Payments</p><p>${k('Ctrl')} + ${k('F')} : Focus Smart Search</p><p>${k('Ctrl')} + ${k('Z')} / ${k('Y')} : Undo / Redo</p><p>${k('Alt')} + ${k('L')} : Lock App</p><p>${k('Shift')} + ${k('?')} : This menu</p></div>`, confirmButtonColor: '#3b82f6' }); }
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key.toLowerCase() === 'k') { e.preventDefault(); if (document.getElementById('cmdPalette')) closeCmdPalette(); else openCmdPalette(); }
+            if (e.altKey && e.key.toLowerCase() === 'l') { e.preventDefault(); lockApp(); }
+            if (e.key === 'Escape') { closeCmdPalette(); }
+        });
+
+        // =====================================================================
+        // WIRING: wrappers + startup hooks
+        // =====================================================================
+        (function () {
+            const _rd = renderDashboard;
+            renderDashboard = function () { _rd.apply(this, arguments); try { if (role === 'Admin') renderDashboardExtras(); refreshAlertBadge(); } catch (e) { console.error(e); } };
+        })();
+        let appReadyDone = false;
+        function onAppReady() {
+            try { refreshAlertBadge(); startIdleLock(); } catch (e) { console.error(e); }
+            if (!appReadyDone) {
+                appReadyDone = true;
+                setTimeout(() => { try { if (role === 'Admin') { const ba = backupAgeDays(); if (ba === null || ba >= 7) showAIHelper(ba === null ? '💾 Backup එකක් ගන්න (Tools → Backup System)' : `💾 අවසන් Backup එක දින ${ba}කට පෙර`); } const al = computeAlerts(false).filter(a => a.lv === 'red'); if (al.length) setTimeout(() => showAIHelper('🔔 ' + al[0].text), 4500); } catch (e) {} }, 2500);
+            }
+        }
+
     </script>
 </body>
 </html> 
