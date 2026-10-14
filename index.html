@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Geethara ERP - Ultra Pro AI</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -899,8 +904,10 @@
 
             const dS = document.getElementById('p_addStreet');
             const dcStreet = document.getElementById('dc_street');
-            if (dS) { dS.innerHTML = ''; streets.forEach(s => dS.innerHTML += `<option value="${s}">${s}</option>`); }
-            if (dcStreet) { dcStreet.innerHTML = ''; streets.forEach(s => dcStreet.innerHTML += `<option value="${s}">${s}</option>`); }
+            // Build option markup once instead of reparsing the entire select on every append.
+            const streetOptionsHTML = streets.map(s => { const safe = escH(s); return `<option value="${safe}">${safe}</option>`; }).join('');
+            if (dS) dS.innerHTML = streetOptionsHTML;
+            if (dcStreet) dcStreet.innerHTML = streetOptionsHTML;
 
             if(document.getElementById('mainApp') && !document.getElementById('mainApp').classList.contains('hidden')) {
                 rebuildStreetTabs();
@@ -967,7 +974,12 @@
             }
         }
 
-        const fmt = (num) => Number(num).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        // Reuse one formatter: reports/tables call fmt hundreds or thousands of times.
+        const moneyFormatter = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const fmt = (value) => moneyFormatter.format(Number(value) || 0);
 
         // ---- LIVE CLOUD DATA CACHES (kept in sync with Firestore via onSnapshot) ----
         let dbCache = [];
@@ -1438,8 +1450,11 @@
         function initUI(keepState) {
             document.body.classList.toggle('pro-on', isPro());
             const dS = document.getElementById('p_addStreet');
-            dS.innerHTML = '';
-            streets.forEach(s => { dS.innerHTML += `<option value="${s}">${s}</option>`; });
+            // One DOM write is substantially faster than repeated innerHTML reparsing.
+            dS.innerHTML = streets.map(s => {
+                const safeStreet = escH(s);
+                return `<option value="${safeStreet}">${safeStreet}</option>`;
+            }).join('');
             // Route selection is remembered: only a fresh login restores the last chosen route; saving bills/payments keeps the current one.
             if (!keepState) { const saved = getSavedStreet(); activeStreet = (saved === 'All' || streets.includes(saved)) ? saved : 'All'; }
             else if (activeStreet !== 'All' && !streets.includes(activeStreet)) activeStreet = 'All';
@@ -1651,8 +1666,8 @@
 
         function openDirectChequeModal() {
             document.getElementById('dc_date').value = sdLockedAdd ? sdLockedAdd : new Date().toISOString().split('T')[0];
-            const dcStreet = document.getElementById('dc_street'); dcStreet.innerHTML = '';
-            streets.forEach(s => { dcStreet.innerHTML += `<option value="${s}" ${s === activeStreet ? 'selected' : ''}>${s}</option>`; });
+            const dcStreet = document.getElementById('dc_street');
+            dcStreet.innerHTML = streets.map(s => { const safe = escH(s); return `<option value="${safe}" ${s === activeStreet ? 'selected' : ''}>${safe}</option>`; }).join('');
             updateDirectChequeRep(); updateBankList();
             
             document.getElementById('dc_outlet').value = ''; document.getElementById('dc_cases').value = ''; document.getElementById('dc_amt').value = ''; document.getElementById('dc_bank').value = ''; document.getElementById('dc_chqNo').value = ''; document.getElementById('dc_bDate').value = '';
@@ -1710,8 +1725,8 @@
             document.getElementById('rc_origAmt').innerText = 'Rs. ' + fmt(ins.amt);
 
             // Populate street dropdown
-            const rcStreet = document.getElementById('rc_street'); rcStreet.innerHTML = '';
-            streets.forEach(s => { rcStreet.innerHTML += `<option value="${s}" ${s === bill.street ? 'selected' : ''}>${s}</option>`; });
+            const rcStreet = document.getElementById('rc_street');
+            rcStreet.innerHTML = streets.map(s => { const safe = escH(s); return `<option value="${safe}" ${s === bill.street ? 'selected' : ''}>${safe}</option>`; }).join('');
 
             document.getElementById('rc_date').value = (parsed.bankDate && parsed.bankDate !== '-') ? parsed.bankDate : new Date().toISOString().split('T')[0];
             document.getElementById('rc_rep').value = bill.repName || '';
@@ -1941,7 +1956,7 @@
             }
             if(statFilter === 'Due') db = db.filter(i => (i.credit - i.collected) > 0);
             if(statFilter === 'Paid') db = db.filter(i => (i.credit - i.collected) <= 0);
-            if(statFilter.startsWith('Overdue')) { let daysLimit = parseInt(statFilter.replace('Overdue', '')) || 30; db = db.filter(i => { const dDiff = (todayDate - new Date(i.date)) / (1000 * 60 * 60 * 24); return (i.credit - i.collected) > 0 && dDiff > daysLimit; }); }
+            if(statFilter.startsWith('Overdue')) { let daysLimit = parseInt(statFilter.replace('Overdue', '')) || 30; db = db.filter(i => { const dDiff = (todayDate.getTime() - new Date(i.date).getTime()) / 86400000; return (i.credit - i.collected) > 0 && dDiff > daysLimit; }); }
 
             db.sort((a,b) => {
                 let valA = a[sortColumn]; let valB = b[sortColumn];
@@ -1953,11 +1968,19 @@
 
             let tC = 0, tCol = 0, pendingCount = 0; let mHtmlStr = ''; let cHtmlStr = '';
             const fullDB = dbCache; const outletTotals = {}; let sysCred = 0, sysCol = 0;
+            // O(bills + cart) aggregation avoids repeatedly scanning the pending cart for each bill.
+            const pendingCartAmounts = new Map();
+            pendingColCart.forEach(c => pendingCartAmounts.set(c.id, (pendingCartAmounts.get(c.id) || 0) + (Number(c.amt) || 0)));
+            const itemDateMs = new Map();
+            const getItemDateMs = dateStr => {
+                if (!itemDateMs.has(dateStr)) itemDateMs.set(dateStr, new Date(dateStr).getTime());
+                return itemDateMs.get(dateStr);
+            };
             fullDB.forEach(i => { outletTotals[i.outlet] = (outletTotals[i.outlet] || 0) + i.collected; sysCred += i.credit; sysCol += i.collected; });
             const wantMas = isPageVisible('page-masterData'), wantCol = isPageVisible('page-collections'); let masShown = 0, colShown = 0;
             db.forEach(item => {
                 tC += item.credit; tCol += item.collected;
-                let cartAmt = pendingColCart.filter(c => c.id === item.id).reduce((s,a) => s+a.amt, 0);
+                let cartAmt = pendingCartAmounts.get(item.id) || 0;
                 const actualBal = item.credit - item.collected; const visualBal = actualBal - cartAmt;
                 if (!(wantMas && masShown < masLimit) && !(wantCol && colShown < colLimit && visualBal > 0 && (activeStreet === 'All' || item.street === activeStreet))) { if (visualBal > 0 && (activeStreet === 'All' || item.street === activeStreet)) pendingCount++; return; }
                 const statBadge = actualBal <= 0 ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold text-[8px] md:text-[10px]">PAID</span>` : `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold text-[8px] md:text-[10px]">DUE</span>`;
@@ -1965,7 +1988,7 @@
                 let totalPaidEver = outletTotals[item.outlet] || 0; let vipBadge = '';
                 if(totalPaidEver > 500000) vipBadge = '👑 Plat'; else if(totalPaidEver > 100000) vipBadge = '⭐ Gold'; else if(totalPaidEver > 50000) vipBadge = '🥈 Slvr';
 
-                const isOverdue = actualBal > 0 && ((todayDate - new Date(item.date)) / (1000 * 60 * 60 * 24) > 30);
+                const isOverdue = actualBal > 0 && ((todayDate.getTime() - getItemDateMs(item.date)) / 86400000 > 30);
                 const rowClass = isOverdue ? 'pulse-red bg-red-50/10' : '';
                 
                 let audArr = item.auditStages || []; let audHTML = `<div class="flex gap-0.5 md:gap-1 justify-center items-center h-full">`;
@@ -2499,7 +2522,7 @@
 
         function renderExpenses() { 
             const hist = document.getElementById('expHistory');
-            let htmlStr = ''; const exps = getExp(); let catTotals = {};
+            let htmlStr = ''; const exps = (expCache || []).slice(); let catTotals = {};
             exps.forEach(e => catTotals[e.cat] = (catTotals[e.cat] || 0) + e.amt); let anaStr = '';
             for(const [cat, amt] of Object.entries(catTotals)) { anaStr += `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">${cat}: ${fmt(amt)}</span>`; } document.getElementById('expAnalytics').innerHTML = anaStr || 'No data';
             exps.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(e => { htmlStr += `
