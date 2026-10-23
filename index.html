@@ -831,7 +831,7 @@
     </div>
 
     <script>
-        const sysVersion = "12.0 Firebase Cloud Sync Edition (Smart Pro)";
+        const sysVersion = "13.0 Firebase Cloud Sync Edition (Smart Pro + Street Progress)";
 
         // =====================================================================
         // FIREBASE SETUP
@@ -3755,6 +3755,113 @@ async function v12DoShare(blob, name) {
     const _a = computeAlerts;
     computeAlerts = function () { const o = _a.apply(this, arguments); try { const bd = extrasCache.settings.budgets || {}, sp = v12Spent(); Object.keys(bd).forEach(c => { const b = num(bd[c]); if (b > 0 && (sp[c] || 0) >= b * 0.8) o.push({ lv: sp[c] >= b ? 'red' : 'amber', icon: 'fa-piggy-bank', text: `${c} වියදම් Budget එකෙන් ${Math.round(sp[c] / b * 100)}%`, go: "openInsights('budget')" }); }); } catch (e) {} return o; };
     const _c = buildCommands; buildCommands = function (q) { const ql = q.trim().toLowerCase(), x = [{ label: 'Export Excel workbook', icon: 'fa-file-excel', run: v12ExportXlsx }].filter(c => !ql || c.label.toLowerCase().includes(ql)); return x.concat(_c.apply(this, arguments)); };
+})();
+</script>
+<script id="v13-enhancements">
+// ===== v13: Street Progress analysis + 15 extra features (isolated, pro-gated like v12) =====
+(function () {
+const ok = () => isPro(), $ = id => document.getElementById(id), sum = a => a.reduce((x, y) => x + y, 0), cl = (v, a, b) => Math.max(a, Math.min(b, v));
+const pmo = t => dateToStr(new Date(+t.slice(0, 4), +t.slice(5, 7) - 2, 1)).slice(0, 7);
+const mons = n => { const a = [], d = new Date(); for (let i = n - 1; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); a.push(x.getFullYear() + '-' + pad2(x.getMonth() + 1)); } return a; };
+window.V13 = { m: 6, st: 'ALL', ch: [] };
+const kill = () => { V13.ch.forEach(c => { try { c.destroy(); } catch (e) {} }); V13.ch = []; };
+function mount(page, id, html, top) { const p = $(page); if (!p) return; let e = $(id); if (!e) { e = document.createElement('div'); e.id = id; e.className = 'glass rounded-2xl p-3 mb-4 no-print'; top ? p.prepend(e) : p.appendChild(e); } e.innerHTML = html; }
+const hook = (fn, page, f) => { const o = window[fn]; if (typeof o !== 'function') return; let t = null; window[fn] = function () { const r = o.apply(this, arguments); clearTimeout(t); t = setTimeout(() => { try { if (ok() && isPageVisible(page)) f(); } catch (e) { console.warn(e); } }, 120); return r; }; };
+const tbl = (h, r, a) => insTable(h, r, a);
+
+// ---------- CORE: month-by-month, street-by-street flow ----------
+function flow(n) {
+  const M = mons(n), f0 = M[0], S = {}, dbt = new Set(), t = localToday(), h = Math.floor(n / 2);
+  dbCache.forEach(b => (b.installments || []).forEach(i => { if (i.returned && i.returnBillId) dbt.add(i.returnBillId); }));
+  const g = s => S[s] = S[s] || { s, op: 0, I: M.map(() => 0), C: M.map(() => 0), bal: 0, od: 0 };
+  dbCache.forEach(b => {
+    const r = g(b.street || '(none)'), m = String(b.date || '').slice(0, 7), k = M.indexOf(m), bl = num(b.credit) - num(b.collected);
+    if (bl > 0.009) { r.bal += bl; if (daysBetween(b.date, t) > 30) r.od += bl; }
+    if (!dbt.has(b.id)) { if (k >= 0) r.I[k] += num(b.credit); else if (m < f0) r.op += num(b.credit); } // returned-cheque debit bills are not new sales
+    (b.installments || []).forEach(i => { if (i.returned) return; const mm = String(i.date || '').slice(0, 7), j = M.indexOf(mm); if (j >= 0) r.C[j] += num(i.amt); else if (mm < f0) r.op -= num(i.amt); });
+  });
+  const rows = Object.values(S).filter(r => r.bal > 0.009 || sum(r.I) || sum(r.C)).map(r => {
+    let c = r.op; r.O = r.I.map((x, i) => c += x - r.C[i]);
+    const I = sum(r.I), C = sum(r.C); r.rate = I ? C / I : (r.bal > 0.009 ? (C > 0 ? 1 : 0) : 1); r.gr = r.O[n - 1] - r.op;
+    const a = sum(r.I.slice(0, h)), b = sum(r.C.slice(0, h)), a2 = sum(r.I.slice(h)), b2 = sum(r.C.slice(h)); r.tr = (a && a2) ? b2 / a2 - b / a : 0;
+    let st = 0; for (let i = n - 1; i >= 0 && r.C[i] < r.I[i]; i--) st++; r.streak = st;
+    r.sc = Math.round(cl(Math.min(r.rate, 1) * 60 + (r.gr <= 0 ? 25 : Math.max(0, 25 - 25 * r.gr / (I || r.gr))) + (r.tr >= 0 ? 15 : Math.max(0, 15 + r.tr * 30)), 0, 100));
+    const w = []; if (r.rate < 0.6) w.push('ආපසු ගෙවීම ' + Math.round(r.rate * 100) + '%'); if (r.streak >= 2) w.push('මාස ' + r.streak + 'ක් එකතුව < ණය'); if (r.gr > 0) w.push('ශේෂය +' + fmt(r.gr)); if (r.bal > 0 && r.od / r.bal > 0.5) w.push('30d+ ' + Math.round(r.od / r.bal * 100) + '%'); r.why = w.join(' • ') || '-';
+    return r;
+  });
+  return { M, rows };
+}
+const lv = r => r.sc < 50 ? ['bg-red-100 text-red-700', 'අඩු ප්‍රගතිය'] : r.sc < 70 ? ['bg-yellow-100 text-yellow-700', 'නිරීක්ෂණය'] : ['bg-green-100 text-green-700', 'හොඳයි'];
+INS_TABS.unshift({ id: 'sprog', label: 'Street Progress', icon: 'fa-road', admin: true });
+INS_TABS.push({ id: 'wkd', label: 'Weekday Pattern', icon: 'fa-calendar-week', admin: true });
+V12_INS.sprog = body => {
+  kill(); const v = V13, F = flow(v.m), R = F.rows.sort((a, b) => a.sc - b.sc), sel = v.st === 'ALL' ? R : R.filter(r => r.s === v.st), cnt = k => R.filter(r => lv(r)[1] === k).length;
+  const cell = (r, i) => { const I = r.I[i], C = r.C[i]; if (!I && !C) return '<td class="p-2 text-center text-gray-300">-</td>'; const p = I ? Math.round(C / I * 100) : 100; return `<td class="p-2 text-center font-bold text-gray-800" style="background:${p >= 80 ? '#bbf7d0' : p >= 50 ? '#fef08a' : '#fecaca'}" title="Credit ${fmt(I)} / Collected ${fmt(C)}">${p}%</td>`; };
+  const ctl = `<div class="flex flex-wrap gap-2 items-center mb-3"><select onchange="V13.m=+this.value;renderInsights()" class="p-2 border rounded-lg text-sm">${[3, 6, 12].map(x => `<option value="${x}" ${x === v.m ? 'selected' : ''}>අවසන් මාස ${x}</option>`).join('')}</select><select onchange="V13.st=this.value;renderInsights()" class="p-2 border rounded-lg text-sm"><option value="ALL">සියලු වීදි (වෙන වෙනම ප්‍රස්ථාර)</option>${R.map(r => `<option ${r.s === v.st ? 'selected' : ''}>${escH(r.s)}</option>`).join('')}</select><button onclick="v13Xlsx()" class="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold"><i class="fas fa-file-excel"></i> Excel</button></div>`;
+  const cards = `<div class="grid grid-cols-3 gap-3 mb-4">${[['අඩු ප්‍රගතිය', 'text-red-600'], ['නිරීක්ෂණය', 'text-yellow-600'], ['හොඳයි', 'text-green-600']].map(x => `<div class="glass rounded-2xl p-3 text-center"><p class="text-[10px] font-bold text-gray-400 uppercase">${x[0]}</p><p class="text-2xl font-extrabold ${x[1]}">${cnt(x[0])}</p></div>`).join('')}</div>`;
+  const rows = R.map(r => `<tr class="border-b ${r.sc < 50 ? 'bg-red-50/60 dark:bg-red-900/10' : ''}"><td class="p-2 font-bold">${escH(r.s)}</td>${F.M.map((m, i) => cell(r, i)).join('')}<td class="p-2 text-center font-bold">${Math.round(r.rate * 100)}%</td><td class="p-2 text-right font-bold ${r.gr > 0 ? 'text-red-500' : 'text-green-600'}">${r.gr > 0 ? '+' : ''}${fmt(r.gr)}</td><td class="p-2 text-center font-extrabold">${r.sc}</td><td class="p-2 text-center"><span class="${lv(r)[0]} px-2 py-0.5 rounded font-bold text-[10px]">${lv(r)[1]}</span></td><td class="p-2 text-[10px] text-gray-500">${escH(r.why)}</td></tr>`);
+  const grid = sel.map((r, i) => `<div class="glass rounded-2xl p-3 border-l-4 ${r.sc < 50 ? 'border-red-500' : r.sc < 70 ? 'border-yellow-400' : 'border-green-500'}"><div class="flex justify-between items-center mb-1"><b class="text-sm">${escH(r.s)}</b><span class="${lv(r)[0]} px-2 py-0.5 rounded font-bold text-[10px]">${lv(r)[1]} • ${r.sc}</span></div><p class="text-[10px] text-gray-500 mb-1">ආපසු ${Math.round(r.rate * 100)}% • ශේෂය Rs. ${fmt(r.bal)}</p><div style="height:${sel.length === 1 ? 300 : 190}px"><canvas id="v13c${i}"></canvas></div></div>`).join('');
+  body.innerHTML = box('🛣️ වීදි ප්‍රගති විශ්ලේෂණය — ලබාදුන් ණය vs එකතු කළ මුදල් (මාසයෙන් මාසය)', ctl + cards + `<p class="text-[10px] text-gray-400 mb-2">කොටු = එම මාසයේ ලබාදුන් ණයෙන් එම මාසයේම එකතු කළ %. ලකුණු = ආපසු ගෙවීම් අනුපාතය + ශේෂය වැඩිවීම + ප්‍රවණතාව. (ආපසු හැරුණු චෙක්පත් එකතුවට ඇතුළත් නොවේ)</p>` + tbl(['වීදිය', ...F.M.map(m => m.slice(2)), 'ආපසු %', 'ශේෂ වෙනස', 'ලකුණු', 'තත්ත්වය', 'හේතු'], rows, ['l', ...F.M.map(() => 'c'), 'c', 'r', 'c', 'c', 'l']) + `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">${grid}</div>`);
+  sel.forEach((r, i) => V13.ch.push(new Chart($('v13c' + i), { data: { labels: F.M.map(m => m.slice(2)), datasets: [{ type: 'bar', label: 'Credit', data: r.I, backgroundColor: '#6366f1', borderRadius: 3 }, { type: 'bar', label: 'Collected', data: r.C, backgroundColor: '#10b981', borderRadius: 3 }, { type: 'line', label: 'Outstanding', data: r.O, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: .3, yAxisID: 'y1' }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, plugins: { legend: { display: i === 0, labels: { boxWidth: 8, font: { size: 9 } } } }, scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } } }, y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 9 } } } } } })));
+};
+window.v13Xlsx = () => { const F = flow(V13.m), o = []; F.rows.sort((a, b) => a.sc - b.sc).forEach(r => F.M.forEach((m, i) => o.push({ Street: r.s, Month: m, 'Credit issued': r.I[i], Collected: r.C[i], 'Collected %': r.I[i] ? Math.round(r.C[i] / r.I[i] * 100) : '', Outstanding: r.O[i], Score: r.sc, Status: lv(r)[1] }))); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(o.length ? o : [{ Info: 'No data' }]), 'Street Progress'); XLSX.writeFile(wb, 'Street_Progress_' + localToday() + '.xlsx'); };
+
+// ---------- 13. Weekday pattern (Insights) ----------
+V12_INS.wkd = body => {
+  kill(); const t = localToday(), a = [0, 0, 0, 0, 0, 0, 0], N = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  dbCache.forEach(b => (b.installments || []).forEach(i => { const d = daysBetween(i.date, t); if (i.returned || !i.date || d < 0 || d > 90) return; a[parseD(i.date).getDay()] += num(i.amt); }));
+  body.innerHTML = box('📆 සතියේ දින අනුව එකතුව (අවසන් දින 90) — වැඩිම: ' + N[a.indexOf(Math.max(...a))], '<div style="height:280px"><canvas id="v13wk"></canvas></div>');
+  V13.ch.push(new Chart($('v13wk'), { type: 'bar', data: { labels: N, datasets: [{ label: 'Collected', data: a, backgroundColor: '#6366f1', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 } } }));
+};
+
+// ---------- DASHBOARD: 1 month-pace, 2 top debtors/payers, 3 low-progress streets ----------
+function dash() {
+  const t = localToday(), m = t.slice(0, 7), dn = +t.slice(8), pm = pmo(t), dim = new Date(+t.slice(0, 4), +t.slice(5, 7), 0).getDate(); let cm = 0, pc = 0; const by = {};
+  dbCache.forEach(b => (b.installments || []).forEach(i => { if (i.returned) return; const d = i.date || '', a = num(i.amt); if (d.startsWith(m)) { cm += a; const k = normName(b.outlet); by[k] = (by[k] || 0) + a; } else if (d.startsWith(pm) && +d.slice(8) <= dn) pc += a; }));
+  const pj = cm / dn * dim, deb = [...getShopIndex().map.values()].filter(s => s.balance > 0).sort((a, b) => b.balance - a.balance).slice(0, 5), pay = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 5), low = flow(6).rows.filter(r => r.sc < 50).sort((a, b) => a.sc - b.sc).slice(0, 4), L = (x, c) => `<p class="flex justify-between text-xs border-b py-1"><span>${x[0]}</span><b class="${c}">${x[1]}</b></p>`;
+  mount('page-dashboard', 'v13dash', `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4"><div><h4 class="font-bold text-sm mb-2">📈 මාසික වේගය</h4>${L(['මෙම මාසය (අද දක්වා)', 'Rs. ' + fmt(cm)], 'text-emerald-600')}${L(['පෙර මාසය (එම දිනය දක්වා)', 'Rs. ' + fmt(pc)], '')}${L(['මාස අවසානයට ප්‍රක්ෂේපණය', 'Rs. ' + fmt(pj)], 'text-indigo-600')}${L(['වෙනස', pc ? Math.round((cm - pc) / pc * 100) + '%' : '-'], cm >= pc ? 'text-emerald-600' : 'text-red-500')}</div><div><h4 class="font-bold text-sm mb-2">🏆 ඉහළම ගෙවන්නන් / 🔴 ණයගැති</h4>${pay.map(x => L([escH(x[0]), fmt(x[1])], 'text-emerald-600')).join('')}<div class="h-2"></div>${deb.map(s => L([escH(s.name), fmt(s.balance)], 'text-red-500')).join('')}</div><div><h4 class="font-bold text-sm mb-2">🛣️ අඩු ප්‍රගතිය සහිත වීදි</h4>${low.map(r => `<p class="text-xs border-b py-1"><b>${escH(r.s)}</b> <span class="text-red-500 font-bold">${r.sc}</span><br><span class="text-[10px] text-gray-500">${escH(r.why)}</span></p>`).join('') || '<p class="text-xs text-green-600">සියලු වීදි හොඳින්</p>'}<button onclick="openInsights('sprog')" class="mt-2 bg-theme text-white px-3 py-1.5 rounded-lg text-xs font-bold">ප්‍රස්ථාර බලන්න →</button></div></div>`);
+}
+{ const o = renderDashboard; renderDashboard = function () { const r = o.apply(this, arguments); try { if (ok() && role === 'Admin' && isPageVisible('page-dashboard')) dash(); } catch (e) { console.warn(e); } return r; }; }
+
+// ---------- ADD BILLS: 4 duplicate bill-no warning, 5 typical-credit chips ----------
+const bn = $('p_addBillNo'), ou = $('p_addOutlet'), cr = $('p_addCredit');
+if (bn) bn.addEventListener('input', () => { if (!ok()) return; const v = bn.value.trim().toUpperCase(), d = v && (dbCache.some(b => String(b.billNo || '').toUpperCase() === v) || pendingCart.some(p => String(p.billNo || '').toUpperCase() === v)); bn.style.borderColor = d ? '#ef4444' : ''; let n = $('v13dup'); if (!n) { n = document.createElement('p'); n.id = 'v13dup'; n.className = 'text-[10px] font-bold text-red-500'; bn.parentNode.appendChild(n); } n.textContent = d ? '⚠️ මෙම Bill අංකය දැනටමත් පවතී!' : ''; });
+function chips() { if (!ok() || !ou || !cr) return; let e = $('v13chips'); if (!e) { e = document.createElement('div'); e.id = 'v13chips'; e.className = 'flex flex-wrap gap-1 mt-1'; cr.parentNode.appendChild(e); } const s = shopStat(ou.value.trim()), v = s ? [...new Set(s.bills.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 8).map(b => num(b.credit)))].slice(0, 4) : []; e.innerHTML = v.map(x => `<button type="button" onclick="document.getElementById('p_addCredit').value=${x};saveDraft()" class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold" title="පෙර බිල්පත්">${fmt(x)}</button>`).join(''); }
+if (ou) ['input', 'change', 'blur'].forEach(ev => ou.addEventListener(ev, chips));
+
+// ---------- COLLECTIONS: 6 today's per-street totals ----------
+hook('renderTables', 'page-collections', () => { const t = localToday(), m = {}; dbCache.forEach(b => (b.installments || []).forEach(i => { if (i.date === t && !i.returned) m[b.street] = (m[b.street] || 0) + num(i.amt); })); const e = Object.entries(m).sort((a, b) => b[1] - a[1]); mount('page-collections', 'v13col', `<div class="flex flex-wrap gap-2 items-center text-xs"><b>අද වීදි අනුව එකතුව:</b>${e.map(([s, a]) => `<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">${escH(s)}: ${fmt(a)}</span>`).join('') || '<span class="text-gray-400">තවම නැත</span>'}<b class="ml-auto">Rs. ${fmt(sum(e.map(x => x[1])))}</b></div>`, true); });
+
+// ---------- CHEQUES: 7 bank-wise pending & return rate ----------
+hook('renderCheques', 'page-cheques', () => { const t = localToday(), g = {}; v12Cheques().forEach(c => { const o = g[c.bank] = g[c.bank] || { n: 0, rn: 0, pn: 0, pa: 0 }; o.n++; if (c.ret) o.rn++; else if (c.date >= t) { o.pn++; o.pa += c.amt; } }); const rows = Object.entries(g).sort((a, b) => b[1].pa - a[1].pa).map(([b, o]) => { const p = Math.round(o.rn / o.n * 100); return `<tr class="border-b"><td class="p-2 font-bold">${escH(b)}</td><td class="p-2 text-center">${o.pn}</td><td class="p-2 text-right">${fmt(o.pa)}</td><td class="p-2 text-center">${o.rn}/${o.n}</td><td class="p-2 text-center font-bold ${p >= 5 ? 'text-red-600' : 'text-green-600'}">${p}%</td></tr>`; }); mount('page-cheques', 'v13chq', `<h4 class="font-bold text-sm mb-2">🏦 බැංකු අනුව පොරොත්තු චෙක්පත් සහ ආපසු හැරීම්</h4><div class="max-h-48 overflow-y-auto">${tbl(['Bank', 'Pending #', 'Pending Rs.', 'Returned', 'Return %'], rows, ['l', 'c', 'r', 'c', 'c'])}</div>`, true); });
+
+// ---------- MASTER DATA: 8 copy / WhatsApp filtered summary ----------
+window.v13Copy = w => { const d = currentlyFilteredData || [], cr = sum(d.map(b => num(b.credit))), co = sum(d.map(b => num(b.collected))), top = d.filter(b => num(b.credit) - num(b.collected) > 0.009).sort((a, b) => (num(b.credit) - num(b.collected)) < (num(a.credit) - num(a.collected)) ? -1 : 1).slice(0, 15), s = `*${getSettings().name}* — ${activeStreet}\nBills: ${d.length}\nCredit: Rs. ${fmt(cr)}\nCollected: Rs. ${fmt(co)}\n*Balance: Rs. ${fmt(cr - co)}*\n` + top.map(b => `• ${b.outlet} (${b.billNo || '-'}): ${fmt(num(b.credit) - num(b.collected))}`).join('\n'); if (w) window.open('https://wa.me/?text=' + encodeURIComponent(s), '_blank'); else navigator.clipboard.writeText(s).then(() => Toast.fire({ icon: 'success', title: 'Copied' })).catch(() => Swal.fire({ title: 'Summary', html: '<pre class="text-left text-xs">' + escH(s) + '</pre>' })); };
+hook('renderTables', 'page-masterData', () => { const d = currentlyFilteredData || []; mount('page-masterData', 'v13mas', `<div class="flex flex-wrap gap-2 items-center text-xs"><button onclick="v13Copy(0)" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg font-bold"><i class="fas fa-copy"></i> Filtered Summary Copy</button><button onclick="v13Copy(1)" class="bg-green-500 text-white px-3 py-1.5 rounded-lg font-bold"><i class="fab fa-whatsapp"></i> WhatsApp</button><span class="text-gray-500">${d.length} bills • Balance Rs. ${fmt(sum(d.map(b => num(b.credit) - num(b.collected))))}</span></div>`, true); });
+
+// ---------- EXPENSES: 9 category doughnut + month-over-month ----------
+hook('renderExpenses', 'page-expenses', () => {
+  const t = localToday(), m = t.slice(0, 7), pm = pmo(t), c = {}; let tc = 0, tp = 0; (expCache || []).forEach(e => { const d = e.date || ''; if (d.startsWith(m)) { c[e.cat] = (c[e.cat] || 0) + num(e.amt); tc += num(e.amt); } else if (d.startsWith(pm)) tp += num(e.amt); });
+  mount('page-expenses', 'v13exp', `<div class="flex flex-wrap items-center gap-4"><div style="height:170px;width:170px"><canvas id="v13ec"></canvas></div><div class="text-sm"><b>මෙම මාසයේ වියදම: Rs. ${fmt(tc)}</b><br>පෙර මාසය: Rs. ${fmt(tp)} <b class="${tc > tp ? 'text-red-500' : 'text-green-600'}">${tp ? (tc > tp ? '▲ ' : '▼ ') + Math.abs(Math.round((tc - tp) / tp * 100)) + '%' : ''}</b></div></div>`, true);
+  if (window._v13e) { try { window._v13e.destroy(); } catch (x) {} } const k = Object.keys(c); window._v13e = new Chart($('v13ec'), { type: 'doughnut', data: { labels: k, datasets: [{ data: k.map(x => c[x]), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'] }] }, options: { maintainAspectRatio: false, animation: { duration: 0 }, plugins: { legend: { display: false } } } });
+});
+
+// ---------- ROUTES: 10 route scorecard ----------
+hook('renderRoutesManager', 'page-routesManage', () => { const R = flow(6).rows.sort((a, b) => a.sc - b.sc); mount('page-routesManage', 'v13rt', `<h4 class="font-bold text-sm mb-2">🛣️ Route Scorecard (අවසන් මාස 6)</h4>${tbl(['Route', 'Rep', 'ආපසු %', 'ශේෂය', '30d+', 'ලකුණු'], R.map(r => `<tr class="border-b"><td class="p-2 font-bold">${escH(r.s)}</td><td class="p-2">${escH(repMapping[r.s] || '-')}</td><td class="p-2 text-center">${Math.round(r.rate * 100)}%</td><td class="p-2 text-right">${fmt(r.bal)}</td><td class="p-2 text-right text-red-500">${fmt(r.od)}</td><td class="p-2 text-center"><span class="${lv(r)[0]} px-2 py-0.5 rounded font-bold text-[10px]">${r.sc}</span></td></tr>`), ['l', 'l', 'c', 'r', 'r', 'c'])}`); });
+
+// ---------- AUDIT: 11 search + CSV export ----------
+window.v13AuF = () => { const q = ($('v13auq') ? $('v13auq').value : '').toLowerCase(); document.querySelectorAll('#auditBody tr').forEach(r => r.style.display = !q || r.textContent.toLowerCase().includes(q) ? '' : 'none'); };
+window.v13AuCsv = () => { const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"', c = 'Time,User,Action\n' + (logsCache || []).map(l => [l.time, l.user, l.action].map(q).join(',')).join('\n'), a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + c], { type: 'text/csv' })); a.download = 'audit_' + localToday() + '.csv'; a.click(); };
+hook('renderAudit', 'page-audit', () => { const v = $('v13auq') ? $('v13auq').value : ''; mount('page-audit', 'v13au', `<div class="flex gap-2"><input id="v13auq" oninput="v13AuF()" placeholder="Search logs (user / action)..." class="flex-1 p-2 border rounded-lg text-sm"><button onclick="v13AuCsv()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold"><i class="fas fa-file-csv"></i> CSV</button></div>`, true); $('v13auq').value = v; v13AuF(); });
+
+// ---------- SHOP NAMES: 12 inactive zero-balance shops ----------
+hook('renderShopNames', 'page-shopNames', () => { const t = localToday(), l = [...getShopIndex().map.values()].filter(s => s.balance <= 0.009 && s.lastBillDate && daysBetween(s.lastBillDate, t) > 180).sort((a, b) => a.lastBillDate.localeCompare(b.lastBillDate)).slice(0, 30); mount('page-shopNames', 'v13sn', `<h4 class="font-bold text-sm mb-2">🧹 අක්‍රිය කඩ (ශේෂය 0, දින 180+ බිල් නැත) — ${l.length}</h4><div class="flex flex-wrap gap-1">${l.map(s => `<span class="px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-700 text-[10px]">${escH(s.name)} • ${s.lastBillDate}</span>`).join('') || '<span class="text-xs text-gray-400">නැත</span>'}</div>`); });
+
+// ---------- GLOBAL: 14 Alt+1..9 page shortcuts, 15 smart alert + palette ----------
+const PG = ['dashboard', 'addBills', 'collections', 'cheques', 'masterData', 'expenses', 'routesManage', 'audit', 'insights'];
+document.addEventListener('keydown', e => { if (!ok() || !e.altKey || !/^[1-9]$/.test(e.key) || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) return; const b = $('nav-' + PG[+e.key - 1]); if (b && b.offsetParent) { e.preventDefault(); b.click(); } });
+{ const a = computeAlerts; computeAlerts = function () { const o = a.apply(this, arguments); try { const l = flow(6).rows.filter(r => r.sc < 50); if (l.length) o.push({ lv: 'amber', icon: 'fa-road', text: `අඩු ප්‍රගතිය සහිත වීදි ${l.length}: ${l.slice(0, 3).map(r => r.s).join(', ')}`, go: "openInsights('sprog')" }); } catch (e) {} return o; }; }
+{ const c = buildCommands; buildCommands = function (q) { const ql = q.trim().toLowerCase(), x = [{ label: 'Street Progress (වීදි ප්‍රගතිය)', icon: 'fa-road', run: () => openInsights('sprog') }, { label: 'Weekday Pattern', icon: 'fa-calendar-week', run: () => openInsights('wkd') }].filter(i => !ql || i.label.toLowerCase().includes(ql)); return x.concat(c.apply(this, arguments)); }; }
 })();
 </script>
 </body>
