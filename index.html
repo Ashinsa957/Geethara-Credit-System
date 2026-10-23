@@ -3768,6 +3768,7 @@ const kill = () => { V13.ch.forEach(c => { try { c.destroy(); } catch (e) {} });
 function mount(page, id, html, top) { const p = $(page); if (!p) return; let e = $(id); if (!e) { e = document.createElement('div'); e.id = id; e.className = 'glass rounded-2xl p-3 mb-4 no-print'; top ? p.prepend(e) : p.appendChild(e); } e.innerHTML = html; }
 const hook = (fn, page, f) => { const o = window[fn]; if (typeof o !== 'function') return; let t = null; window[fn] = function () { const r = o.apply(this, arguments); clearTimeout(t); t = setTimeout(() => { try { if (ok() && isPageVisible(page)) f(); } catch (e) { console.warn(e); } }, 120); return r; }; };
 const tbl = (h, r, a) => insTable(h, r, a);
+const box = (t, i) => v12Box(t, i);
 
 // ---------- CORE: month-by-month, street-by-street flow ----------
 function flow(n) {
